@@ -1,0 +1,2 @@
+# Blocus-game
+Game blocus
