@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PixelForge Ultimate V12.0</title>
+<style>
+  /* ================= ANIMATIONS ================= */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ================= VARIABLES ================= */
+  :root {
+    --bg-base: #050508; --bg-surface: #0f1016; --bg-elevated: #181a24; --bg-hover: #222533;
+    --border: #2a2e40; --border-focus: #4f46e5; --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b;
+    --accent: #6366f1; --accent-hover: #4f46e5; --accent-glow: rgba(99, 102, 241, 0.4);
+    --success: #10b981; --danger: #ef4444;
+    --radius-sm: 8px; --radius-md: 14px; --radius-lg: 20px; --radius-full: 9999px;
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.5); --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Thèmes des onglets */
+  body.theme-cartoon { --accent: #f59e0b; --accent-hover: #d97706; --accent-glow: rgba(245, 158, 11, 0.4); --border-focus: #f59e0b; }
+  body.theme-logo { --accent: #10b981; --accent-hover: #059669; --accent-glow: rgba(16, 185, 129, 0.4); --border-focus: #10b981; }
+  body.theme-photo { --accent: #ef4444; --accent-hover: #dc2626; --accent-glow: rgba(239, 68, 68, 0.4); --border-focus: #ef4444; }
+  body.theme-art { --accent: #ec4899; --accent-hover: #db2777; --accent-glow: rgba(236, 72, 153, 0.4); --border-focus: #ec4899; }
+  body.theme-chat { --accent: #0ea5e9; --accent-hover: #0284c7; --accent-glow: rgba(14, 165, 233, 0.4); --border-focus: #0ea5e9; }
+  body.theme-chat-gallery { --accent: #d946ef; --accent-hover: #c026d3; --accent-glow: rgba(217, 70, 239, 0.4); --border-focus: #d946ef; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+  body { background-color: var(--bg-base); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; flex-direction: column; font-size: 16px; }
+  
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-full); }
+
+  /* ================= TOP BAR ================= */
+  .top-bar { background: #000; padding: 8px; display: flex; justify-content: center; gap: 8px; border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; }
+  .device-btn { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 16px; border-radius: var(--radius-full); cursor: pointer; font-size: 12px; font-weight: 600; transition: var(--transition); display: flex; align-items: center; gap: 6px; }
+  .device-btn.active { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 0 10px var(--accent-glow); }
+  .device-btn:active { transform: scale(0.95); }
+
+  /* ================= APP SIMULATOR ================= */
+  .app-wrapper { flex: 1; display: flex; flex-direction: column; margin: 0 auto; width: 100%; height: 100%; overflow: hidden; transition: var(--transition); background: var(--bg-base); position: relative; }
+  .device-mobile { max-width: 420px; height: calc(100vh - 50px); margin-top: 5px; border-radius: var(--radius-lg); border: 2px solid var(--border); box-shadow: var(--shadow-lg); }
+  .device-tablet { max-width: 820px; height: calc(100vh - 50px); margin-top: 5px; border-radius: var(--radius-md); border: 2px solid var(--border); box-shadow: var(--shadow-lg); }
+  .device-desktop { max-width: 100%; height: calc(100vh - 50px); }
+
+  /* ================= HEADER ================= */
+  header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: var(--bg-surface); border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 10; }
+  .logo { font-size: 18px; font-weight: 900; background: linear-gradient(90deg, #818cf8, #c084fc, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  
+  /* ================= ONGLETS ================= */
+  .mobile-tabs { display: none; background: var(--bg-surface); border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+  .mobile-tabs::-webkit-scrollbar { display: none; }
+  .mobile-tabs button { flex: 0 0 auto; background: none; border: none; padding: 14px 18px; font-size: 14px; font-weight: 700; color: var(--text-secondary); cursor: pointer; border-bottom: 3px solid transparent; transition: var(--transition); }
+  .mobile-tabs button.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--accent-glow); }
+
+  /* ================= LAYOUT ================= */
+  .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+  .device-desktop .main-layout { flex-direction: row; }
+  .device-mobile .main-layout, .device-tablet .main-layout { flex-direction: column; }
+
+  /* ================= SIDEBAR ================= */
+  .sidebar { background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; position: relative; -webkit-overflow-scrolling: touch; }
+  .device-mobile .sidebar, .device-tablet .sidebar { width: 100%; height: 100%; border-right: none; padding: 20px; padding-bottom: 120px; display: none; }
+  .device-desktop .sidebar { width: 420px; padding: 24px; resize: horizontal; min-width: 340px; max-width: 600px; display: flex; }
+  
+  .sidebar-content { display: flex; flex-direction: column; gap: 20px; animation: slideUp 0.4s ease-out; }
+
+  /* ================= FORMULAIRES ================= */
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  label { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  
+  input[type="text"], input[type="number"], input[type="password"], select, textarea {
+    width: 100%; background: var(--bg-base); border: 1px solid var(--border); color: var(--text-primary);
+    border-radius: var(--radius-sm); padding: 12px 14px; font-size: 16px; outline: none; transition: var(--transition); font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+  .row { display: flex; gap: 12px; align-items: center; }
+  .row > * { flex: 1; min-width: 0; }
+
+  /* ================= CHIPS & TAGS ================= */
+  .chips-scroll { max-height: 220px; overflow-y: auto; padding-right: 6px; }
+  .chips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 8px; }
+  .chip { background: var(--bg-base); border: 1px solid var(--border); color: var(--text-secondary); font-size: 11px; font-weight: 600; padding: 8px 4px; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chip:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .chip.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+
+  /* ================= BOUTONS ================= */
+  .btn { border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-size: 14px; padding: 12px 16px; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn:active { transform: scale(0.96); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: white; width: 100%; box-shadow: 0 4px 15px var(--accent-glow); }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-2px); }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
+  .btn-ghost:hover { background: var(--bg-hover); }
+  .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+  .btn-danger:hover { background: var(--danger); color: white; }
+
+  /* FIX BOUTON GÉNÉRER MOBILE */
+  .generate-btn-wrapper { position: relative; margin-top: 10px; }
+  .device-mobile .generate-btn-wrapper, .device-tablet .generate-btn-wrapper {
+    position: fixed; bottom: 0; left: 0; right: 0; padding: 16px 20px; 
+    background: rgba(15, 16, 22, 0.95); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border); z-index: 1000; margin: 0;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+  }
+  .device-mobile .generate-btn-wrapper { max-width: 420px; margin: 0 auto; }
+  .device-tablet .generate-btn-wrapper { max-width: 820px; margin: 0 auto; }
+
+  /* ================= GALERIE ================= */
+  .gallery { flex: 1; display: flex; flex-direction: column; background: var(--bg-base); overflow: hidden; }
+  .device-mobile .gallery, .device-tablet .gallery { display: none; width: 100%; height: 100%; }
+  .device-desktop .gallery { display: flex; }
+  .gallery-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--bg-surface); }
+  .gallery-scroll { flex: 1; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch; }
+  .gallery-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .device-mobile .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 12px; }
+  
+  .card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; transition: var(--transition); animation: popIn 0.3s; }
+  .card:hover { transform: translateY(-5px); border-color: var(--border-focus); }
+  .card-img { width: 100%; background: #000; display: flex; align-items: center; justify-content: center; }
+  .card-img img { width: 100%; height: auto; display: block; }
+  .card-info { padding: 12px; }
+  .card-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .card-actions .btn { flex: 1; padding: 8px; font-size: 11px; }
+
+  /* ================= ÉDITEUR D'IMAGES ================= */
+  .editor-area { flex: 1; display: none; flex-direction: column; background: var(--bg-base); overflow: hidden; }
+  .device-desktop .editor-area { display: flex; }
+  
+  .editor-toolbar { background: var(--bg-surface); border-bottom: 1px solid var(--border); padding: 12px; display: flex; gap: 8px; overflow-x: auto; flex-shrink: 0; }
+  .editor-toolbar button { flex: 0 0 auto; padding: 10px 14px; font-size: 13px; background: var(--bg-elevated); border: 1px solid var(--border); color: white; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .editor-toolbar button:hover { background: var(--bg-hover); border-color: var(--accent); }
+
+  .editor-workspace { flex: 1; overflow-y: auto; display: flex; justify-content: center; align-items: flex-start; padding: 20px; background: #000; -webkit-overflow-scrolling: touch; }
+  
+  .editor-canvas-container { position: relative; max-width: 100%; display: inline-block; user-select: none; -webkit-user-select: none; }
+  .editor-canvas-container img { max-width: 100%; max-height: 60vh; display: block; pointer-events: none; border-radius: 4px; }
+  
+  /* CALQUES */
+  .layer { position: absolute; cursor: grab; transform-origin: center center; touch-action: none; user-select: none; white-space: nowrap; display: flex; align-items: center; justify-content: center; border: 2px dashed transparent; padding: 4px; z-index: 10; }
+  .layer:active { cursor: grabbing; }
+  .layer.selected { border-color: var(--accent); background: rgba(99, 102, 241, 0.2); border-radius: 4px; }
+  
+  .editor-panel { background: var(--bg-surface); border-top: 1px solid var(--border); padding: 16px; display: none; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; flex-shrink: 0; }
+  .editor-panel.active { display: flex; animation: slideUp 0.3s; }
+  
+  .layer-props { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .layer-props input[type="color"] { width: 40px; height: 40px; padding: 0; border: none; border-radius: var(--radius-sm); cursor: pointer; }
+  
+  /* ================= CHAT AREA (NORMAL & GALERIE) ================= */
+  .chat-area { flex: 1; display: none; flex-direction: column; background: var(--bg-base); overflow: hidden; height: 100%; }
+  .device-desktop .chat-area { display: flex; }
+  
+  .chat-header { padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--bg-surface); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+  .chat-header h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .chat-header .ai-logo { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #818cf8); display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 0 12px var(--accent-glow); }
+  
+  .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; -webkit-overflow-scrolling: touch; }
+  .message { display: flex; gap: 12px; max-width: 85%; animation: slideUp 0.3s; }
+  .message.user { align-self: flex-end; flex-direction: row-reverse; }
+  .message.assistant { align-self: flex-start; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .message.user .avatar { background: var(--accent); color: white; }
+  .message.assistant .avatar { background: var(--bg-elevated); border: 1px solid var(--border); }
+  .bubble { padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.6; word-wrap: break-word; }
+  .message.user .bubble { background: var(--accent); color: white; border-bottom-right-radius: 4px; }
+  .message.assistant .bubble { background: var(--bg-surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  
+  .chat-image-container { margin-top: 10px; border-radius: 8px; overflow: hidden; background: #000; }
+  .chat-image-container img { width: 100%; max-width: 300px; display: block; }
+
+  .chat-input-area { padding: 16px; background: var(--bg-surface); border-top: 1px solid var(--border); display: flex; gap: 12px; flex-shrink: 0; }
+  .chat-input-area textarea { flex: 1; min-height: 50px; max-height: 150px; border-radius: 24px; padding: 14px 20px; font-size: 14px; resize: none; }
+  .chat-input-area .btn { flex: 0 0 50px; border-radius: 50%; padding: 0; height: 50px; font-size: 20px; }
+  
+  .typing-indicator { display: flex; gap: 4px; padding: 12px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; border-bottom-left-radius: 4px; width: fit-content; }
+  .typing-dot { width: 8px; height: 8px; background: var(--text-muted); border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
+  .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+  .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+  @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+  /* ================= MODALS ================= */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; animation: fadeIn 0.2s; }
+  .modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 450px; animation: slideUp 0.3s; max-height: 90vh; overflow-y: auto; }
+  
+  .emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; max-height: 300px; overflow-y: auto; padding: 10px; }
+  .emoji-btn { font-size: 28px; background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; padding: 10px; transition: var(--transition); }
+  .emoji-btn:hover { background: var(--bg-hover); transform: scale(1.1); }
+
+  /* ================= TOASTS ================= */
+  #toasts { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 12px; z-index: 99999; pointer-events: none; }
+  .toast { padding: 14px 20px; border-radius: var(--radius-sm); color: white; font-weight: 600; font-size: 14px; box-shadow: var(--shadow-lg); animation: slideUp 0.3s; display: flex; align-items: center; gap: 10px; }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+  .toast.info { background: var(--accent); }
+
+  .spinner { width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.1); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+
+  /* AFFICHAGE CONDITIONNEL */
+  .device-mobile .mobile-tabs, .device-tablet .mobile-tabs { display: flex; }
+  .device-mobile .sidebar.active-tab, .device-tablet .sidebar.active-tab { display: flex; }
+  .device-mobile .gallery.active-tab, .device-tablet .gallery.active-tab { display: flex; }
+  .device-mobile .editor-area.active-tab, .device-tablet .editor-area.active-tab { display: flex; }
+  .device-mobile .chat-area.active-tab, .device-tablet .chat-area.active-tab { display: flex; }
+</style>
+</head>
+<body class="theme-normal">
+
+<div class="top-bar">
+  <button class="device-btn" data-device="mobile" onclick="setDevice('mobile')">📱 Mobile</button>
+  <button class="device-btn" data-device="tablet" onclick="setDevice('tablet')">📟 Tablette</button>
+  <button class="device-btn active" data-device="desktop" onclick="setDevice('desktop')">💻 Ordinateur</button>
+</div>
+
+<div class="app-wrapper device-desktop" id="app-wrapper">
+  <header>
+    <div class="logo">🎨 PixelForge V12</div>
+    <div class="header-actions" style="display: flex; gap: 8px;">
+      <button class="btn btn-primary" onclick="openModal('help-modal')" style="padding: 8px 12px; font-size: 12px; width: auto; box-shadow: none;">❓ Aide</button>
+      <button class="btn btn-ghost" onclick="openModal('settings-modal')" style="padding: 8px 12px; font-size: 12px;">⚙️ API</button>
+    </div>
+  </header>
+
+  <!-- ONGLETS -->
+  <div class="mobile-tabs" id="mobile-tabs-container">
+    <button id="tab-btn-creative" class="active" onclick="switchTab('creative')">🎨 Créatif</button>
+    <button id="tab-btn-cartoon" onclick="switchTab('cartoon')">🤡 Cartoon</button>
+    <button id="tab-btn-logo" onclick="switchTab('logo')">💼 Logo</button>
+    <button id="tab-btn-photo" onclick="switchTab('photo')">📷 Photo</button>
+    <button id="tab-btn-art" onclick="switchTab('art')">🖼️ Art</button>
+    <button id="tab-btn-chat" onclick="switchTab('chat')">💬 Chat</button>
+    <button id="tab-btn-chat-gallery" onclick="switchTab('chatGallery')">📸 Chat Galerie</button>
+    <button id="tab-btn-gallery" onclick="switchTab('gallery')">📂 Galerie</button>
+    <button id="tab-btn-editor" onclick="switchTab('editor')">✂️ Éditeur</button>
+  </div>
+
+  <div class="main-layout">
+    
+    <!-- 1. ONGLET CRÉATIF -->
+    <aside class="sidebar active-tab" id="sidebar-creative">
+      <div class="sidebar-content">
+        <div class="form-group">
+          <label>Description</label>
+          <div class="row">
+            <textarea id="prompt-creative" placeholder="Ex: Un samouraï cyberpunk sous la pluie..."></textarea>
+            <button class="btn btn-ghost" onclick="generateRandomPrompt('prompt-creative')" style="flex: 0 0 50px; padding: 10px; font-size: 20px;">🎲</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Styles Créatifs</label>
+          <div class="chips-scroll"><div class="chips-grid" id="styles-creative"></div></div>
+        </div>
+        <div class="form-group">
+          <label>Prompt Négatif (À éviter)</label>
+          <input type="text" id="neg-creative" placeholder="Ex: flou, mauvaise qualité, texte...">
+        </div>
+        <div class="row">
+          <div class="form-group"><label>Format</label>
+            <select id="ratio-creative"><option value="1:1">Carré (1:1)</option><option value="16:9">Paysage (16:9)</option><option value="9:16">Portrait (9:16)</option></select>
+          </div>
+          <div class="form-group"><label>Batch</label>
+            <select id="batch-creative"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 2. ONGLET CARTOON -->
+    <aside class="sidebar" id="sidebar-cartoon">
+      <div class="sidebar-content">
+        <div style="background: var(--accent-glow); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--accent);">
+          <p style="font-size: 12px; color: var(--text-primary);">L'IA va forcer un style dessin animé.</p>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <div class="row">
+            <textarea id="prompt-cartoon" placeholder="Ex: Un chat qui joue aux jeux vidéo..."></textarea>
+            <button class="btn btn-ghost" onclick="generateRandomPrompt('prompt-cartoon')" style="flex: 0 0 50px; padding: 10px; font-size: 20px;">🎲</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Styles Cartoon</label>
+          <div class="chips-scroll"><div class="chips-grid" id="styles-cartoon"></div></div>
+        </div>
+        <div class="form-group">
+          <label>Prompt Négatif (À éviter)</label>
+          <input type="text" id="neg-cartoon" placeholder="Ex: réaliste, photo, sombre...">
+        </div>
+        <div class="row">
+          <div class="form-group"><label>Format</label>
+            <select id="ratio-cartoon"><option value="1:1">Carré (1:1)</option><option value="16:9">Paysage (16:9)</option></select>
+          </div>
+          <div class="form-group"><label>Batch</label>
+            <select id="batch-cartoon"><option value="1">1</option><option value="2">2</option></select>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 3. ONGLET LOGO -->
+    <aside class="sidebar" id="sidebar-logo">
+      <div class="sidebar-content">
+        <div class="form-group">
+          <label>Nom de la marque / Concept</label>
+          <div class="row">
+            <textarea id="prompt-logo" placeholder="Ex: Un logo minimaliste pour un café bio..."></textarea>
+            <button class="btn btn-ghost" onclick="generateRandomPrompt('prompt-logo')" style="flex: 0 0 50px; padding: 10px; font-size: 20px;">🎲</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Styles Logo</label>
+          <div class="chips-scroll"><div class="chips-grid" id="styles-logo"></div></div>
+        </div>
+        <div class="form-group">
+          <label>Prompt Négatif (À éviter)</label>
+          <input type="text" id="neg-logo" placeholder="Ex: complexe, 3D, texte illisible...">
+        </div>
+        <div class="row">
+          <div class="form-group"><label>Format</label>
+            <select id="ratio-logo"><option value="1:1">Carré (1:1)</option></select>
+          </div>
+          <div class="form-group"><label>Batch</label>
+            <select id="batch-logo"><option value="1">1</option><option value="2">2</option><option value="4">4</option></select>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 4. ONGLET PHOTO -->
+    <aside class="sidebar" id="sidebar-photo">
+      <div class="sidebar-content">
+        <div class="form-group">
+          <label>Description de la photo</label>
+          <div class="row">
+            <textarea id="prompt-photo" placeholder="Ex: Un portrait d'une femme âgée, lumière naturelle..."></textarea>
+            <button class="btn btn-ghost" onclick="generateRandomPrompt('prompt-photo')" style="flex: 0 0 50px; padding: 10px; font-size: 20px;">🎲</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Styles Photo</label>
+          <div class="chips-scroll"><div class="chips-grid" id="styles-photo"></div></div>
+        </div>
+        <div class="form-group">
+          <label>Prompt Négatif (À éviter)</label>
+          <input type="text" id="neg-photo" placeholder="Ex: dessin, anime, flou...">
+        </div>
+        <div class="row">
+          <div class="form-group"><label>Format</label>
+            <select id="ratio-photo"><option value="1:1">Carré (1:1)</option><option value="16:9">Paysage (16:9)</option><option value="9:16">Portrait (9:16)</option></select>
+          </div>
+          <div class="form-group"><label>Batch</label>
+            <select id="batch-photo"><option value="1">1</option><option value="2">2</option></select>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 5. ONGLET ART -->
+    <aside class="sidebar" id="sidebar-art">
+      <div class="sidebar-content">
+        <div class="form-group">
+          <label>Description de l'œuvre</label>
+          <div class="row">
+            <textarea id="prompt-art" placeholder="Ex: Une peinture à l'huile d'un château flottant..."></textarea>
+            <button class="btn btn-ghost" onclick="generateRandomPrompt('prompt-art')" style="flex: 0 0 50px; padding: 10px; font-size: 20px;">🎲</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Styles Artistiques</label>
+          <div class="chips-scroll"><div class="chips-grid" id="styles-art"></div></div>
+        </div>
+        <div class="form-group">
+          <label>Prompt Négatif (À éviter)</label>
+          <input type="text" id="neg-art" placeholder="Ex: photo, réaliste, moderne...">
+        </div>
+        <div class="row">
+          <div class="form-group"><label>Format</label>
+            <select id="ratio-art"><option value="1:1">Carré (1:1)</option><option value="16:9">Paysage (16:9)</option></select>
+          </div>
+          <div class="form-group"><label>Batch</label>
+            <select id="batch-art"><option value="1">1</option><option value="2">2</option></select>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 6. ONGLET CHAT NORMAL -->
+    <main class="chat-area" id="chat-area">
+      <div class="chat-header">
+        <h2><div class="ai-logo">🤖</div> Discussion avec Agnes AI</h2>
+        <button class="btn btn-ghost" onclick="clearChat('chat')" style="padding: 6px 12px; font-size: 12px;">🗑 Effacer</button>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <!-- Les messages s'affichent ici -->
+      </div>
+      <div class="chat-input-area">
+        <textarea id="chat-input" placeholder="Pose ta question à l'IA..." onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendChatMessage('chat'); }"></textarea>
+        <button class="btn btn-primary" id="btn-send-chat" onclick="sendChatMessage('chat')">➤</button>
+      </div>
+    </main>
+
+    <!-- 7. ONGLET CHAT GALERIE (NOUVEAU) -->
+    <main class="chat-area" id="chat-gallery-area">
+      <div class="chat-header">
+        <h2><div class="ai-logo" style="background: linear-gradient(135deg, #d946ef, #f472b6);">📸</div> Chat Galerie</h2>
+        <button class="btn btn-ghost" onclick="clearChat('chatGallery')" style="padding: 6px 12px; font-size: 12px;">🗑 Effacer</button>
+      </div>
+      <div class="chat-messages" id="chat-gallery-messages">
+        <!-- Les messages s'affichent ici -->
+      </div>
+      <div class="chat-input-area">
+        <textarea id="chat-gallery-input" placeholder="Demande une image (ex: Dessine un chat astronaute...)" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendChatMessage('chatGallery'); }"></textarea>
+        <button class="btn btn-primary" id="btn-send-chat-gallery" onclick="sendChatMessage('chatGallery')">➤</button>
+      </div>
+    </main>
+
+    <!-- 8. GALERIE -->
+    <main class="gallery" id="gallery-area">
+      <div class="gallery-header">
+        <div style="font-weight: 700; font-size: 15px;">📂 Galerie</div>
+        <button class="btn btn-ghost" onclick="document.getElementById('upload-input').click()" style="padding: 6px 12px; font-size: 12px;">📤 Importer</button>
+        <input type="file" id="upload-input" accept="image/*" style="display: none;" onchange="handleUpload(event)">
+      </div>
+      
+      <div class="gallery-scroll">
+        <div id="gallery-grid" class="gallery-grid"></div>
+        <div id="empty-state" style="text-align: center; color: var(--text-muted); margin-top: 80px;">
+          <div style="font-size: 60px; margin-bottom: 20px; opacity: 0.2;">🖼️</div>
+          <h3 style="font-size: 18px; margin-bottom: 8px;">Aucune image</h3>
+          <p style="font-size: 14px;">Vos créations apparaîtront ici.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- 9. ÉDITEUR -->
+    <main class="editor-area" id="editor-area">
+      <div class="editor-toolbar">
+        <button onclick="addLayer('text')">🔤 Texte</button>
+        <button onclick="openModal('emoji-modal')">😀 Emoji</button>
+        <button onclick="addShape('rect')">⬛ Rectangle</button>
+        <button onclick="addShape('circle')">⚪ Cercle</button>
+        <button onclick="applyEditorFilter('grayscale')">⚫ N&B</button>
+        <button onclick="applyEditorFilter('none')">🔄 Reset</button>
+        <button class="btn-primary" onclick="exportEditorImage()" style="margin-left: auto;">⬇ Exporter</button>
+        <button class="btn-primary" onclick="saveEditToGallery()" style="background:var(--success);">💾 Sauver</button>
+      </div>
+      
+      <div class="editor-workspace">
+        <div class="editor-canvas-container" id="editor-canvas-container">
+          <img id="editor-base-img" src="" style="display: none;">
+        </div>
+        <div id="editor-empty-state" style="text-align: center; color: var(--text-muted); margin-top: 50px; width: 100%;">
+          <div style="font-size: 50px; margin-bottom: 15px; opacity: 0.3;">✂️</div>
+          <h3 style="font-size: 16px; margin-bottom: 8px;">Éditeur</h3>
+          <p style="font-size: 13px;">Sélectionnez une image dans la galerie pour l'éditer.</p>
+        </div>
+      </div>
+
+      <div class="editor-panel" id="editor-props-panel">
+        <div class="layer-props">
+          <button class="btn btn-ghost" onclick="modifyLayer('fontSize', 2)">➕ Taille</button>
+          <button class="btn btn-ghost" onclick="modifyLayer('fontSize', -2)">➖ Taille</button>
+          <button class="btn btn-ghost" onclick="modifyLayer('rotation', 15)">🔄 Tourner</button>
+          <input type="color" id="layer-color" onchange="modifyLayer('color', this.value)" title="Couleur">
+          <button class="btn btn-danger" onclick="deleteLayer()">🗑 Suppr</button>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <div class="generate-btn-wrapper" id="generate-wrapper">
+    <button class="btn btn-primary" id="btn-generate" onclick="triggerGeneration()">✨ Générer</button>
+  </div>
+</div>
+
+<!-- MODAL AIDE -->
+<div id="help-modal" class="modal-overlay">
+  <div class="modal">
+    <h2 style="margin-bottom: 15px; text-align: center;">🎈 Bienvenue sur PixelForge !</h2>
+    <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 20px; text-align: center;">Voici comment créer des images magiques ou discuter avec l'IA.</p>
+    
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; gap: 12px; align-items: flex-start;">
+        <div style="background: var(--accent); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
+        <div>
+          <h4 style="margin-bottom: 4px;">Choisis un onglet</h4>
+          <p style="font-size: 13px; color: var(--text-secondary);">En haut, clique sur <b>Créatif</b>, <b>Cartoon</b>, <b>Logo</b>, <b>Photo</b> ou <b>Art</b> pour dessiner, ou <b>Chat</b> pour discuter.</p>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 12px; align-items: flex-start;">
+        <div style="background: var(--accent); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
+        <div>
+          <h4 style="margin-bottom: 4px;">Le mode "Chat Galerie"</h4>
+          <p style="font-size: 13px; color: var(--text-secondary);">Si tu demandes à l'IA de "dessiner un chat", elle générera l'image <b>directement dans la discussion</b> et l'ajoutera à ta galerie.</p>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="margin-top: 24px; padding: 16px;" onclick="closeModal('help-modal')">C'est compris, je vais créer ! 🚀</button>
+  </div>
+</div>
+
+<!-- MODAL SETTINGS -->
+<div id="settings-modal" class="modal-overlay">
+  <div class="modal">
+    <h2 style="margin-bottom: 20px;">⚙️ Paramètres API</h2>
+    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Entrez votre clé API Agnes AI. Elle sera sauvegardée en local et utilisée pour toutes les générations et le chat.</p>
+    <div class="form-group" style="margin-bottom: 24px;">
+      <label>Clé API Agnes AI</label>
+      <input type="password" id="setting-api-key" placeholder="sk-...">
+    </div>
+    <button class="btn btn-primary" onclick="saveSettings()">Sauvegarder la clé</button>
+    <button class="btn btn-ghost" style="margin-top:10px;" onclick="closeModal('settings-modal')">Fermer</button>
+  </div>
+</div>
+
+<!-- MODAL EMOJI -->
+<div id="emoji-modal" class="modal-overlay">
+  <div class="modal" style="max-width: 350px;">
+    <h2 style="margin-bottom: 10px; font-size: 16px;">Choisir un emoji</h2>
+    <div class="emoji-grid">
+      <button class="emoji-btn" onclick="addEmoji('😀')">😀</button>
+      <button class="emoji-btn" onclick="addEmoji('😎')">😎</button>
+      <button class="emoji-btn" onclick="addEmoji('🔥')">🔥</button>
+      <button class="emoji-btn" onclick="addEmoji('✨')">✨</button>
+      <button class="emoji-btn" onclick="addEmoji('🚀')">🚀</button>
+      <button class="emoji-btn" onclick="addEmoji('❤️')">❤️</button>
+      <button class="emoji-btn" onclick="addEmoji('⭐')">⭐</button>
+      <button class="emoji-btn" onclick="addEmoji('👑')">👑</button>
+      <button class="emoji-btn" onclick="addEmoji('🎉')">🎉</button>
+      <button class="emoji-btn" onclick="addEmoji('🎨')">🎨</button>
+      <button class="emoji-btn" onclick="addEmoji('💻')">💻</button>
+      <button class="emoji-btn" onclick="addEmoji('🎮')">🎮</button>
+    </div>
+    <button class="btn btn-ghost" style="margin-top: 15px;" onclick="closeModal('emoji-modal')">Fermer</button>
+  </div>
+</div>
+
+<!-- MODAL TEXTE -->
+<div id="text-modal" class="modal-overlay">
+  <div class="modal">
+    <h2 style="margin-bottom: 15px; font-size: 16px;">Ajouter du texte</h2>
+    <div class="form-group" style="margin-bottom: 15px;">
+      <input type="text" id="new-text-input" placeholder="Votre texte...">
+    </div>
+    <div class="row" style="margin-bottom: 20px;">
+      <div class="form-group">
+        <label>Police</label>
+        <select id="new-text-font"><option value="Arial">Arial</option><option value="Impact">Impact</option><option value="Times New Roman">Serif</option><option value="Courier New">Monospace</option></select>
+      </div>
+      <div class="form-group">
+        <label>Couleur</label>
+        <input type="color" id="new-text-color" value="#ffffff" style="height: 45px;">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="confirmAddText()">Ajouter</button>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+/* ================= ÉTAT & CONFIG ================= */
+const State = {
+  gallery: [],
+  activeStyles: {},
+  currentDevice: 'desktop',
+  currentTab: 'creative',
+  isGenerating: false,
+  agnesKey: localStorage.getItem('pf_agnes_key') || '',
+  editor: { imageSrc: null, layers: [], activeLayerId: null, filter: 'none' },
+  chat: { messages: [], isGenerating: false },
+  chatGallery: { messages: [], isGenerating: false }
+};
+
+// 20 STYLES PAR CATÉGORIE (100 AU TOTAL)
+const StyleLibrary = {
+  creative: [
+    { id: 'c1', icon: '🎮', name: 'Gaming', prompt: 'video game concept art' },
+    { id: 'c2', icon: '🌆', name: 'Cyberpunk', prompt: 'cyberpunk, neon lights' },
+    { id: 'c3', icon: '🧊', name: '3D', prompt: '3d render, octane' },
+    { id: 'c4', icon: '👽', name: 'Sci-Fi', prompt: 'sci-fi, futuristic, space' },
+    { id: 'c5', icon: '🧙', name: 'Fantasy', prompt: 'fantasy art, magical' },
+    { id: 'c6', icon: '👻', name: 'Horreur', prompt: 'dark horror, creepy' },
+    { id: 'c7', icon: '🌸', name: 'Anime', prompt: 'anime style, manga' },
+    { id: 'c8', icon: '🦸', name: 'Comics', prompt: 'comic book style' },
+    { id: 'c9', icon: '📼', name: 'Rétro', prompt: 'retro 80s, synthwave' },
+    { id: 'c10', icon: '🛸', name: 'Néon', prompt: 'glowing neon, vibrant' },
+    { id: 'c11', icon: '🌿', name: 'Nature', prompt: 'nature photography' },
+    { id: 'c12', icon: '🏰', name: 'Médiéval', prompt: 'medieval, castle' },
+    { id: 'c13', icon: '🌊', name: 'Abysses', prompt: 'underwater, deep sea' },
+    { id: 'c14', icon: '☁️', name: 'Rêve', prompt: 'dreamlike, ethereal' },
+    { id: 'c15', icon: '🔥', name: 'Apocalypse', prompt: 'post-apocalyptic, ruins' },
+    { id: 'c16', icon: '❄️', name: 'Hiver', prompt: 'winter, snow, ice' },
+    { id: 'c17', icon: '☀️', name: 'Été', prompt: 'summer, sunny, beach' },
+    { id: 'c18', icon: '🏙️', name: 'Urbain', prompt: 'urban city, street' },
+    { id: 'c19', icon: '🦄', name: 'Mignon', prompt: 'cute, kawaii' },
+    { id: 'c20', icon: '🎭', name: 'Mystère', prompt: 'mysterious, dark' }
+  ],
+  cartoon: [
+    { id: 'ct1', icon: '👾', name: 'Pixar', prompt: '3d cartoon style, pixar' },
+    { id: 'ct2', icon: '🇯🇵', name: 'Anime', prompt: '2d anime style' },
+    { id: 'ct3', icon: '💥', name: 'Comic', prompt: 'comic book style' },
+    { id: 'ct4', icon: '🍩', name: 'Simpson', prompt: 'simpsons style' },
+    { id: 'ct5', icon: '🧪', name: 'Rick & Morty', prompt: 'rick and morty style' },
+    { id: 'ct6', icon: '📐', name: 'Flat', prompt: 'flat vector cartoon' },
+    { id: 'ct7', icon: '🌙', name: 'Disney', prompt: 'disney animation style' },
+    { id: 'ct8', icon: '📺', name: '90s', prompt: '90s cartoon, rugrats' },
+    { id: 'ct9', icon: '🗿', name: 'Clay', prompt: 'claymation, playdough' },
+    { id: 'ct10', icon: '🖍️', name: 'Crayon', prompt: 'crayon drawing, childlike' },
+    { id: 'ct11', icon: '😻', name: 'Chibi', prompt: 'chibi style, cute anime' },
+    { id: 'ct12', icon: '🧚', name: 'Fée', prompt: 'fairy tale cartoon' },
+    { id: 'ct13', icon: '🌃', name: 'Manga', prompt: 'black and white manga' },
+    { id: 'ct14', icon: '💧', name: 'Aquarelle', prompt: 'watercolor cartoon' },
+    { id: 'ct15', icon: '🦸', name: 'Hero', prompt: 'superhero cartoon' },
+    { id: 'ct16', icon: '🐶', name: 'Animal', prompt: 'funny animal cartoon' },
+    { id: 'ct17', icon: '🐉', name: 'Dragon', prompt: 'dragon cartoon' },
+    { id: 'ct18', icon: '🚀', name: 'Space', prompt: 'space cartoon' },
+    { id: 'ct19', icon: '🍔', name: 'Food', prompt: 'food cartoon' },
+    { id: 'ct20', icon: '🎨', name: 'Art', prompt: 'artistic cartoon' }
+  ],
+  logo: [
+    { id: 'l1', icon: '📐', name: 'Minimal', prompt: 'minimalist logo' },
+    { id: 'l2', icon: '🏛️', name: 'Luxe', prompt: 'luxury gold logo' },
+    { id: 'l3', icon: '💼', name: 'Corporate', prompt: 'corporate professional logo' },
+    { id: 'l4', icon: '🦁', name: 'Mascotte', prompt: 'mascot logo' },
+    { id: 'l5', icon: '⚙️', name: 'Géométrique', prompt: 'geometric logo' },
+    { id: 'l6', icon: '🎨', name: 'Coloré', prompt: 'colorful logo' },
+    { id: 'l7', icon: '📼', name: 'Vintage', prompt: 'vintage retro logo' },
+    { id: 'l8', icon: '✒️', name: 'Line Art', prompt: 'line art logo' },
+    { id: 'l9', icon: '🧊', name: '3D', prompt: '3d logo' },
+    { id: 'l10', icon: '🌿', name: 'Bio', prompt: 'organic eco logo' },
+    { id: 'l11', icon: '💻', name: 'Tech', prompt: 'tech futuristic logo' },
+    { id: 'l12', icon: '🌙', name: 'Nuit', prompt: 'dark mode logo' },
+    { id: 'l13', icon: '🏺', name: 'Art Déco', prompt: 'art deco logo' },
+    { id: 'l14', icon: '🎭', name: 'Théâtre', prompt: 'drama theater logo' },
+    { id: 'l15', icon: '☕', name: 'Café', prompt: 'cafe coffee logo' },
+    { id: 'l16', icon: '✈️', name: 'Voyage', prompt: 'travel logo' },
+    { id: 'l17', icon: '🎵', name: 'Musique', prompt: 'music logo' },
+    { id: 'l18', icon: '🍎', name: 'Santé', prompt: 'health food logo' },
+    { id: 'l19', icon: '⚽', name: 'Sport', prompt: 'sports dynamic logo' },
+    { id: 'l20', icon: '📸', name: 'Photo', prompt: 'camera photography logo' }
+  ],
+  photo: [
+    { id: 'p1', icon: '👤', name: 'Portrait', prompt: 'portrait photography' },
+    { id: 'p2', icon: '🌿', name: 'Nature', prompt: 'nature photography' },
+    { id: 'p3', icon: '🌃', name: 'Urbain', prompt: 'urban street photography' },
+    { id: 'p4', icon: '🍔', name: 'Food', prompt: 'food photography' },
+    { id: 'p5', icon: '🐾', name: 'Animaux', prompt: 'animal photography' },
+    { id: 'p6', icon: '⛰️', name: 'Paysage', prompt: 'landscape photography' },
+    { id: 'p7', icon: '💍', name: 'Mariage', prompt: 'wedding photography' },
+    { id: 'p8', icon: '🏢', name: 'Architecture', prompt: 'architecture photography' },
+    { id: 'p9', icon: '🚗', name: 'Voiture', prompt: 'car photography' },
+    { id: 'p10', icon: '🌌', name: 'Astro', prompt: 'astrophotography stars' },
+    { id: 'p11', icon: '💧', name: 'Macro', prompt: 'macro photography' },
+    { id: 'p12', icon: '🌅', name: 'Golden Hour', prompt: 'golden hour photography' },
+    { id: 'p13', icon: '🌧️', name: 'Pluie', prompt: 'rainy photography' },
+    { id: 'p14', icon: '❄️', name: 'Hiver', prompt: 'winter photography' },
+    { id: 'p15', icon: '🏖️', name: 'Plage', prompt: 'beach photography' },
+    { id: 'p16', icon: '🌲', name: 'Forêt', prompt: 'forest photography' },
+    { id: 'p17', icon: '⚫', name: 'Noir & Blanc', prompt: 'black and white photography' },
+    { id: 'p18', icon: '🎞️', name: 'Argentique', prompt: 'analog film photography' },
+    { id: 'p19', icon: '🌆', name: 'Néon', prompt: 'neon night photography' },
+    { id: 'p20', icon: '💡', name: 'Studio', prompt: 'studio lighting photography' }
+  ],
+  art: [
+    { id: 'a1', icon: '🖼️', name: 'Huile', prompt: 'oil painting' },
+    { id: 'a2', icon: '✏️', name: 'Croquis', prompt: 'pencil sketch' },
+    { id: 'a3', icon: '🌀', name: 'Surréalisme', prompt: 'surrealism' },
+    { id: 'a4', icon: '🎨', name: 'Aquarelle', prompt: 'watercolor painting' },
+    { id: 'a5', icon: '💥', name: 'Pop Art', prompt: 'pop art' },
+    { id: 'a6', icon: '🏛️', name: 'Art Déco', prompt: 'art deco' },
+    { id: 'a7', icon: '🌌', name: 'Impressionnisme', prompt: 'impressionism' },
+    { id: 'a8', icon: '🧊', name: 'Cubisme', prompt: 'cubism' },
+    { id: 'a9', icon: '🇯🇵', name: 'Ukiyo-e', prompt: 'ukiyo-e' },
+    { id: 'a10', icon: '🖍️', name: 'Pastel', prompt: 'pastel drawing' },
+    { id: 'a11', icon: '🖤', name: 'Gothique', prompt: 'gothic art' },
+    { id: 'a12', icon: '🌸', name: 'Baroque', prompt: 'baroque art' },
+    { id: 'a13', icon: '🧱', name: 'Street Art', prompt: 'street art graffiti' },
+    { id: 'a14', icon: '🪄', name: 'Vitrail', prompt: 'stained glass' },
+    { id: 'a15', icon: '🇬🇷', name: 'Statue', prompt: 'sculpture art' },
+    { id: 'a16', icon: '✒️', name: 'Calligraphie', prompt: 'calligraphy art' },
+    { id: 'a17', icon: '📜', name: 'Renaissance', prompt: 'renaissance painting' },
+    { id: 'a18', icon: '🧩', name: 'Mosaïque', prompt: 'mosaic art' },
+    { id: 'a19', icon: '📐', name: 'Bauhaus', prompt: 'bauhaus art' },
+    { id: 'a20', icon: '🔮', name: 'Symbolisme', prompt: 'symbolism art' }
+  ]
+};
+
+const $ = (id) => document.getElementById(id);
+
+function init() {
+  renderAllStyles();
+  loadFromDB();
+  updateSettingsUI();
+  initChats();
+  if(window.innerWidth <= 900) setDevice('mobile'); else setDevice('desktop');
+}
+
+/* ================= UI & LAYOUT ================= */
+function setDevice(mode) {
+  State.currentDevice = mode;
+  $('app-wrapper').className = `app-wrapper device-${mode}`;
+  document.querySelectorAll('.device-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelector(`[data-device="${mode}"]`).classList.add('active');
+  switchTab(State.currentTab);
+}
+
+function switchTab(tab) {
+  State.currentTab = tab;
+  document.querySelectorAll('.mobile-tabs button').forEach(btn => btn.classList.remove('active'));
+  if($(`tab-btn-${tab}`)) $(`tab-btn-${tab}`).classList.add('active');
+  
+  ['creative', 'cartoon', 'logo', 'photo', 'art'].forEach(t => $(`sidebar-${t}`).classList.remove('active-tab'));
+  $('gallery-area').classList.remove('active-tab');
+  $('editor-area').classList.remove('active-tab');
+  $('chat-area').classList.remove('active-tab');
+  $('chat-gallery-area').classList.remove('active-tab');
+
+  if (['creative', 'cartoon', 'logo', 'photo', 'art'].includes(tab)) {
+    $(`sidebar-${tab}`).classList.add('active-tab');
+    $('generate-wrapper').style.display = 'block';
+  } else if (tab === 'gallery') {
+    $('gallery-area').classList.add('active-tab');
+    $('generate-wrapper').style.display = 'none';
+  } else if (tab === 'editor') {
+    $('editor-area').classList.add('active-tab');
+    $('generate-wrapper').style.display = 'none';
+  } else if (tab === 'chat') {
+    $('chat-area').classList.add('active-tab');
+    $('generate-wrapper').style.display = 'none';
+  } else if (tab === 'chatGallery') {
+    $('chat-gallery-area').classList.add('active-tab');
+    $('generate-wrapper').style.display = 'none';
+  }
+
+  document.body.className = tab === 'cartoon' ? 'theme-cartoon' : tab === 'logo' ? 'theme-logo' : tab === 'photo' ? 'theme-photo' : tab === 'art' ? 'theme-art' : tab === 'chat' ? 'theme-chat' : tab === 'chatGallery' ? 'theme-chat-gallery' : 'theme-normal';
+
+  if (State.currentDevice === 'desktop') {
+    if (tab === 'editor') { $('gallery-area').style.display = 'none'; $('editor-area').style.display = 'flex'; $('chat-area').style.display = 'none'; $('chat-gallery-area').style.display = 'none'; }
+    else if (tab === 'chat') { $('gallery-area').style.display = 'none'; $('editor-area').style.display = 'none'; $('chat-area').style.display = 'flex'; $('chat-gallery-area').style.display = 'none'; }
+    else if (tab === 'chatGallery') { $('gallery-area').style.display = 'none'; $('editor-area').style.display = 'none'; $('chat-area').style.display = 'none'; $('chat-gallery-area').style.display = 'flex'; }
+    else { $('gallery-area').style.display = 'flex'; $('editor-area').style.display = 'none'; $('chat-area').style.display = 'none'; $('chat-gallery-area').style.display = 'none'; }
+  }
+}
+
+function renderAllStyles() {
+  ['creative', 'cartoon', 'logo', 'photo', 'art'].forEach(cat => {
+    const container = $(`styles-${cat}`);
+    container.innerHTML = '';
+    StyleLibrary[cat].forEach(style => {
+      const btn = document.createElement('button');
+      btn.className = 'chip';
+      btn.innerHTML = `<span style="font-size:16px;">${style.icon}</span> <span>${style.name}</span>`;
+      btn.onclick = () => {
+        container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        State.activeStyles[cat] = style.prompt;
+      };
+      container.appendChild(btn);
+    });
+  });
+}
+
+function generateRandomPrompt(targetId) {
+  const base = ["Un astronaute", "Une créature", "Un paysage", "Un objet volant"];
+  const action = ["flottant", "méditant", "explosant", "brillant"];
+  $(targetId).value = `${base[Math.floor(Math.random()*base.length)]} ${action[Math.floor(Math.random()*action.length)]}, masterpiece, 8k`;
+  toast('Inspiration générée !', 'info');
+}
+
+/* ================= GÉNÉRATION D'IMAGES (AGNES AI) ================= */
+function triggerGeneration() {
+  generateImages(State.currentTab);
+}
+
+async function generateImages(category) {
+  if (State.isGenerating) return;
+  if (!State.agnesKey) {
+    toast("Veuillez entrer votre clé API dans ⚙️ Paramètres.", "error");
+    openModal('settings-modal');
+    return;
+  }
+  
+  let promptInput, ratioSelect, batchSelect, style = State.activeStyles[category] || '', negative = '';
+  
+  if (category === 'creative') { promptInput = $('prompt-creative'); ratioSelect = $('ratio-creative'); batchSelect = $('batch-creative'); negative = $('neg-creative').value; }
+  else if (category === 'cartoon') { promptInput = $('prompt-cartoon'); ratioSelect = $('ratio-cartoon'); batchSelect = $('batch-cartoon'); negative = $('neg-cartoon').value; }
+  else if (category === 'logo') { promptInput = $('prompt-logo'); ratioSelect = $('ratio-logo'); batchSelect = $('batch-logo'); negative = $('neg-logo').value; }
+  else if (category === 'photo') { promptInput = $('prompt-photo'); ratioSelect = $('ratio-photo'); batchSelect = $('batch-photo'); negative = $('neg-photo').value; }
+  else if (category === 'art') { promptInput = $('prompt-art'); ratioSelect = $('ratio-art'); batchSelect = $('batch-art'); negative = $('neg-art').value; }
+
+  let basePrompt = promptInput.value.trim();
+  if (!basePrompt) { toast("Décrivez une image !", "error"); return; }
+
+  let finalPrompt = basePrompt;
+  if (style) finalPrompt += `, ${style}`;
+  if (negative) finalPrompt += ` --no ${negative}`;
+
+  const ratio = ratioSelect.value;
+  const batchSize = parseInt(batchSelect.value);
+
+  setGeneratingState(true);
+  if (State.currentDevice !== 'desktop') switchTab('gallery');
+
+  for (let i = 0; i < batchSize; i++) {
+    const loadingCard = addLoadingCard();
+    try {
+      const imgSrc = await fetchAgnesImage(finalPrompt, ratio);
+      removeLoadingCard(loadingCard);
+      const newItem = { id: 'img-' + Date.now() + '-' + i, src: imgSrc, prompt: basePrompt, mode: category, time: Date.now() };
+      State.gallery.unshift(newItem);
+      saveToDB(newItem);
+      renderGallery();
+    } catch (err) {
+      removeLoadingCard(loadingCard);
+      toast(`Erreur : ${err.message}`, 'error', 5000);
+    }
+  }
+  setGeneratingState(false);
+  toast('Génération terminée !', 'success');
+}
+
+async function fetchAgnesImage(prompt, ratio = '1:1') {
+  const res = await fetch('https://apihub.agnes-ai.com/v1/images/generations', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${State.agnesKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: "agnes-image-2.5-flash", prompt: prompt, size: "1K", ratio: ratio, extra_body: { response_format: 'b64_json' } })
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error?.message || `Erreur API (${res.status})`);
+  const imgSrc = json.data?.[0]?.b64_json ? `data:image/png;base64,${json.data[0].b64_json}` : json.data?.[0]?.url;
+  if (!imgSrc) throw new Error("Format invalide");
+  return imgSrc;
+}
+
+function setGeneratingState(bool) {
+  State.isGenerating = bool;
+  const btn = $('btn-generate');
+  btn.disabled = bool;
+  btn.innerHTML = bool ? '<div class="spinner"></div> Création...' : '✨ Générer';
+}
+
+/* ================= CHAT IA (NORMAL & GALERIE) ================= */
+function initChats() {
+  // Chat normal
+  const savedChat = localStorage.getItem('pf_chat_history');
+  if (savedChat) { try { State.chat.messages = JSON.parse(savedChat); } catch(e) {} }
+  renderChatMessages('chat');
+
+  // Chat Galerie
+  const savedChatG = localStorage.getItem('pf_chat_gallery_history');
+  if (savedChatG) { try { State.chatGallery.messages = JSON.parse(savedChatG); } catch(e) {} }
+  renderChatMessages('chatGallery');
+}
+
+function renderChatMessages(mode) {
+  const isGallery = mode === 'chatGallery';
+  const container = $(isGallery ? 'chat-gallery-messages' : 'chat-messages');
+  const msgs = isGallery ? State.chatGallery.messages : State.chat.messages;
+  
+  container.innerHTML = '';
+  
+  if (msgs.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; color: var(--text-muted); margin-top: 40px;">
+        <div style="font-size: 40px; margin-bottom: 12px; opacity: 0.3;">${isGallery ? '📸' : '💬'}</div>
+        <p style="font-size: 14px;">${isGallery ? 'Demande-moi de dessiner quelque chose ! (ex: "Dessine un chat")' : 'Pose ta première question à l\'IA.'}</p>
+      </div>`;
+    return;
+  }
+
+  msgs.forEach(msg => {
+    if (msg.role === 'system') return;
+    const el = document.createElement('div');
+    el.className = `message ${msg.role}`;
+    
+    let bubbleContent = `<div>${escapeHtml(msg.content)}</div>`;
+    if (msg.image) {
+      bubbleContent += `<div class="chat-image-container"><img src="${msg.image}" onclick="openEditorFromGallery('${msg.image}')" style="cursor: pointer;"></div>`;
+    }
+
+    el.innerHTML = `
+      <div class="avatar">${msg.role === 'user' ? '👤' : '🤖'}</div>
+      <div class="bubble">${bubbleContent}</div>
+    `;
+    container.appendChild(el);
+  });
+  
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendChatMessage(mode) {
+  const isGallery = mode === 'chatGallery';
+  const currentChat = isGallery ? State.chatGallery : State.chat;
+  
+  if (currentChat.isGenerating) return;
+  if (!State.agnesKey) { toast("Veuillez entrer votre clé API.", "error"); openModal('settings-modal'); return; }
+
+  const input = $(isGallery ? 'chat-gallery-input' : 'chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  currentChat.messages.push({ role: 'user', content: text });
+  input.value = '';
+  renderChatMessages(mode);
+  saveChatHistory(mode);
+
+  currentChat.isGenerating = true;
+  const btn = $(isGallery ? 'btn-send-chat-gallery' : 'btn-send-chat');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div>';
+
+  const container = $(isGallery ? 'chat-gallery-messages' : 'chat-messages');
+  const typingEl = document.createElement('div');
+  typingEl.className = 'message assistant';
+  typingEl.id = `typing-indicator-${mode}`;
+  typingEl.innerHTML = `
+    <div class="avatar">🤖</div>
+    <div class="typing-indicator">
+      <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+    </div>`;
+  container.appendChild(typingEl);
+  container.scrollTop = container.scrollHeight;
+
+  try {
+    let sysPrompt = `Tu es un assistant utile, amical et créatif. Tu réponds toujours en français. Nous sommes le ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
+    
+    if (isGallery) {
+      sysPrompt = `Tu es un générateur d'images intelligent. Si l'utilisateur te demande de générer, dessiner ou créer une image, tu DOIS répondre UNIQUEMENT avec un objet JSON valide et rien d'autre (sans texte autour, sans balises Markdown) : {"action": "generate_image", "prompt": "traduction du prompt en anglais, très détaillé, 8k"}. Si l'utilisateur te parle normalement, réponds normalement en texte.`;
+    }
+
+    const messagesForApi = [
+      { role: 'system', content: sysPrompt },
+      ...currentChat.messages.map(m => ({ role: m.role, content: m.content })) // On n'envoie pas les images à l'API texte pour économiser des tokens
+    ];
+
+    const res = await fetch('https://apihub.agnes-ai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${State.agnesKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: "agnes-3.0-flash", messages: messagesForApi, temperature: 0.7, max_tokens: 2000 })
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error?.message || `Erreur API (${res.status})`);
+
+    let reply = json.choices?.[0]?.message?.content;
+    if (!reply) throw new Error("Réponse vide de l'IA.");
+
+    // Traitement spécial pour le chat galerie
+    if (isGallery) {
+      let jsonAction = null;
+      try {
+        // Tente d'extraire le JSON même s'il y a du texte autour
+        const match = reply.match(/\{.*\}/s);
+        if (match) jsonAction = JSON.parse(match[0]);
+      } catch(e) {}
+
+      if (jsonAction && jsonAction.action === 'generate_image') {
+        // L'IA veut générer une image !
+        currentChat.messages.push({ role: 'assistant', content: "Je génère l'image..." });
+        document.getElementById(`typing-indicator-${mode}`)?.remove();
+        renderChatMessages(mode);
+        
+        // Afficher un indicateur de chargement pour l'image
+        const imgLoadingEl = document.createElement('div');
+        imgLoadingEl.className = 'message assistant';
+        imgLoadingEl.id = `img-loading-${mode}`;
+        imgLoadingEl.innerHTML = `<div class="avatar">🤖</div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+        container.appendChild(imgLoadingEl);
+        container.scrollTop = container.scrollHeight;
+
+        // Générer l'image
+        try {
+          const imageSrc = await fetchAgnesImage(jsonAction.prompt, '1:1');
+          document.getElementById(`img-loading-${mode}`)?.remove();
+          
+          // Mettre à jour le message de l'assistant
+          const lastMsg = currentChat.messages[currentChat.messages.length - 1];
+          lastMsg.content = "Voici l'image que tu as demandée ! Tu peux cliquer dessus pour l'éditer.";
+          lastMsg.image = imageSrc;
+          
+          // Sauvegarder dans la galerie globale
+          const newItem = { id: 'img-' + Date.now(), src: imageSrc, prompt: jsonAction.prompt, mode: 'chat-gallery', time: Date.now() };
+          State.gallery.unshift(newItem);
+          saveToDB(newItem);
+          renderGallery();
+
+          saveChatHistory(mode);
+          renderChatMessages(mode);
+          toast('Image générée et ajoutée à la galerie !', 'success');
+        } catch (err) {
+          document.getElementById(`img-loading-${mode}`)?.remove();
+          currentChat.messages.push({ role: 'assistant', content: `Désolé, je n'ai pas pu générer l'image : ${err.message}` });
+          saveChatHistory(mode);
+          renderChatMessages(mode);
+        }
+      } else {
+        // C'est une réponse textuelle normale
+        currentChat.messages.push({ role: 'assistant', content: reply });
+        saveChatHistory(mode);
+      }
+    } else {
+      // Chat normal
+      currentChat.messages.push({ role: 'assistant', content: reply });
+      saveChatHistory(mode);
+    }
+
+  } catch (err) {
+    toast(`Erreur Chat : ${err.message}`, 'error', 5000);
+    currentChat.messages.push({ role: 'assistant', content: `Désolé, j'ai rencontré une erreur : ${err.message}` });
+    saveChatHistory(mode);
+  } finally {
+    currentChat.isGenerating = false;
+    btn.disabled = false;
+    btn.innerHTML = '➤';
+    document.getElementById(`typing-indicator-${mode}`)?.remove();
+    renderChatMessages(mode);
+  }
+}
+
+function clearChat(mode) {
+  if (!confirm("Effacer tout l'historique de discussion ?")) return;
+  if (mode === 'chatGallery') {
+    State.chatGallery.messages = [];
+    localStorage.setItem('pf_chat_gallery_history', JSON.stringify([]));
+    renderChatMessages('chatGallery');
+  } else {
+    State.chat.messages = [];
+    localStorage.setItem('pf_chat_history', JSON.stringify([]));
+    renderChatMessages('chat');
+  }
+  toast('Discussion effacée.', 'info');
+}
+
+function saveChatHistory(mode) {
+  if (mode === 'chatGallery') {
+    const toSave = State.chatGallery.messages.slice(-20);
+    localStorage.setItem('pf_chat_gallery_history', JSON.stringify(toSave));
+  } else {
+    const toSave = State.chat.messages.slice(-20);
+    localStorage.setItem('pf_chat_history', JSON.stringify(toSave));
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML.replace(/\n/g, '<br>');
+}
+
+/* ================= GALERIE ================= */
+function addLoadingCard() {
+  $('empty-state').style.display = 'none';
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.style.height = '200px';
+  div.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; height:100%;"><div class="spinner" style="border-top-color:var(--accent);"></div></div>`;
+  $('gallery-grid').prepend(div);
+  return div;
+}
+function removeLoadingCard(el) { if (el && el.parentNode) el.parentNode.removeChild(el); }
+
+function renderGallery() {
+  $('gallery-grid').innerHTML = '';
+  if (State.gallery.length === 0) { $('empty-state').style.display = 'block'; return; }
+  $('empty-state').style.display = 'none';
+
+  State.gallery.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-img"><img src="${item.src}" loading="lazy"></div>
+      <div class="card-info">
+        <div class="card-actions">
+          <button class="btn btn-ghost" onclick="downloadImg('${item.src}')">⬇</button>
+          <button class="btn btn-ghost" onclick="reusePrompt('${item.mode}', '${item.prompt.replace(/'/g, "\\'")}')">🔄</button>
+          <button class="btn btn-primary" onclick="openEditorFromGallery('${item.src}')">✂️</button>
+          <button class="btn btn-danger" onclick="deleteFromGallery('${item.id}')">🗑</button>
+        </div>
+      </div>
+    `;
+    $('gallery-grid').appendChild(card);
+  });
+}
+
+function deleteFromGallery(id) {
+  if(!confirm("Supprimer cette image ?")) return;
+  State.gallery = State.gallery.filter(i => i.id !== id);
+  deleteFromDB(id);
+  renderGallery();
+}
+
+function reusePrompt(mode, prompt) {
+  if (!['creative', 'cartoon', 'logo', 'photo', 'art'].includes(mode)) mode = 'creative';
+  switchTab(mode);
+  $(`prompt-${mode}`).value = prompt;
+  toast('Prompt rechargé !', 'success');
+}
+
+/* ================= ÉDITEUR D'IMAGES ================= */
+function openEditorFromGallery(src) {
+  switchTab('editor');
+  loadImageToEditor(src);
+}
+
+function handleUpload(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => { switchTab('editor'); loadImageToEditor(ev.target.result); };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function loadImageToEditor(src) {
+  State.editor.imageSrc = src;
+  State.editor.layers = [];
+  State.editor.activeLayerId = null;
+  State.editor.filter = 'none';
+  
+  const img = $('editor-base-img');
+  img.src = src;
+  img.style.display = 'block';
+  img.style.filter = 'none';
+  $('editor-empty-state').style.display = 'none';
+  $('editor-props-panel').classList.remove('active');
+  renderEditorLayers();
+}
+
+function renderEditorLayers() {
+  document.querySelectorAll('.layer').forEach(el => el.remove());
+  const container = $('editor-canvas-container');
+  
+  State.editor.layers.forEach(layer => {
+    const el = document.createElement('div');
+    el.className = 'layer' + (layer.id === State.editor.activeLayerId ? ' selected' : '');
+    el.id = `layer-${layer.id}`;
+    el.style.left = `${layer.x}%`;
+    el.style.top = `${layer.y}%`;
+    el.style.transform = `translate(-50%, -50%) rotate(${layer.rotation}deg)`;
+    
+    if (layer.type === 'text') {
+      el.innerText = layer.content;
+      el.style.color = layer.color;
+      el.style.fontSize = `${layer.fontSize}px`;
+      el.style.fontFamily = layer.font;
+      el.style.fontWeight = 'bold';
+    } else if (layer.type === 'emoji') {
+      el.innerText = layer.content;
+      el.style.fontSize = `${layer.fontSize}px`;
+    } else if (layer.type === 'rect' || layer.type === 'circle') {
+      el.style.width = `${layer.width}px`; el.style.height = `${layer.height}px`;
+      el.style.background = 'rgba(255,255,255,0.5)';
+      el.style.border = '2px solid white';
+      if (layer.type === 'circle') el.style.borderRadius = '50%';
+    }
+
+    el.onpointerdown = (e) => {
+      e.preventDefault(); 
+      if (State.editor.activeLayerId !== layer.id) {
+        State.editor.activeLayerId = layer.id;
+        renderEditorLayers();
+      }
+      el.setPointerCapture(e.pointerId);
+      const rect = container.getBoundingClientRect();
+      let startX = e.clientX, startY = e.clientY;
+      let layerStartX = layer.x, layerStartY = layer.y;
+
+      const onMove = (ev) => {
+        layer.x = layerStartX + ((ev.clientX - startX) / rect.width) * 100;
+        layer.y = layerStartY + ((ev.clientY - startY) / rect.height) * 100;
+        el.style.left = `${layer.x}%`;
+        el.style.top = `${layer.y}%`;
+      };
+      const onUp = () => {
+        el.removeEventListener('pointermove', onMove);
+        el.removeEventListener('pointerup', onUp);
+      };
+      el.addEventListener('pointermove', onMove);
+      el.addEventListener('pointerup', onUp);
+    };
+    container.appendChild(el);
+  });
+
+  if (State.editor.activeLayerId) {
+    $('editor-props-panel').classList.add('active');
+    const activeLayer = State.editor.layers.find(l => l.id === State.editor.activeLayerId);
+    if(activeLayer && activeLayer.type === 'text') $('layer-color').value = activeLayer.color;
+  } else {
+    $('editor-props-panel').classList.remove('active');
+  }
+}
+
+function addLayer(type) {
+  if (!State.editor.imageSrc) { toast("Importez une image !", "error"); return; }
+  if (type === 'text') { $('new-text-input').value = ''; openModal('text-modal'); }
+  else if (type === 'emoji') openModal('emoji-modal');
+}
+
+function confirmAddText() {
+  const text = $('new-text-input').value.trim();
+  if(!text) return;
+  State.editor.layers.push({
+    id: 'l-' + Date.now(), type: 'text', content: text,
+    x: 50, y: 50, fontSize: 32, color: $('new-text-color').value, font: $('new-text-font').value, rotation: 0
+  });
+  State.editor.activeLayerId = State.editor.layers[State.editor.layers.length-1].id;
+  closeModal('text-modal');
+  renderEditorLayers();
+}
+
+function addEmoji(emoji) {
+  State.editor.layers.push({
+    id: 'l-' + Date.now(), type: 'emoji', content: emoji,
+    x: 50, y: 50, fontSize: 50, rotation: 0
+  });
+  State.editor.activeLayerId = State.editor.layers[State.editor.layers.length-1].id;
+  closeModal('emoji-modal');
+  renderEditorLayers();
+}
+
+function addShape(shape) {
+  if (!State.editor.imageSrc) { toast("Importez une image !", "error"); return; }
+  State.editor.layers.push({
+    id: 'l-' + Date.now(), type: shape, content: '',
+    x: 50, y: 50, width: 80, height: 80, rotation: 0
+  });
+  State.editor.activeLayerId = State.editor.layers[State.editor.layers.length-1].id;
+  renderEditorLayers();
+}
+
+function modifyLayer(prop, value) {
+  const layer = State.editor.layers.find(l => l.id === State.editor.activeLayerId);
+  if (!layer) return;
+  if (prop === 'fontSize') { layer.fontSize += value; if(layer.width) layer.width += value; if(layer.height) layer.height += value; }
+  if (prop === 'rotation') layer.rotation += value;
+  if (prop === 'color') layer.color = value;
+  renderEditorLayers();
+}
+
+function deleteLayer() {
+  State.editor.layers = State.editor.layers.filter(l => l.id !== State.editor.activeLayerId);
+  State.editor.activeLayerId = null;
+  renderEditorLayers();
+}
+
+function applyEditorFilter(filter) {
+  State.editor.filter = filter;
+  const img = $('editor-base-img');
+  if (filter === 'grayscale') img.style.filter = 'grayscale(100%)';
+  else img.style.filter = 'none';
+}
+
+function saveEditToGallery() {
+  if (!State.editor.imageSrc) return;
+  const img = new Image(); img.crossOrigin = "Anonymous";
+  img.onload = () => {
+    const dataUrl = flattenCanvas(img);
+    const newItem = { id: 'img-' + Date.now(), src: dataUrl, prompt: 'Édition', mode: 'editor', time: Date.now() };
+    State.gallery.unshift(newItem);
+    saveToDB(newItem);
+    renderGallery();
+    toast('Sauvegardé dans la galerie !', 'success');
+  };
+  img.src = State.editor.imageSrc;
+}
+
+function exportEditorImage() {
+  if (!State.editor.imageSrc) return;
+  const img = new Image(); img.crossOrigin = "Anonymous";
+  img.onload = () => {
+    const dataUrl = flattenCanvas(img);
+    const a = document.createElement('a'); a.href = dataUrl; a.download = `pixelforge-edit.png`; a.click();
+    toast('Image exportée !', 'success');
+  };
+  img.src = State.editor.imageSrc;
+}
+
+function flattenCanvas(img) {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width; canvas.height = img.height;
+  const ctx = canvas.getContext('2d');
+  
+  if (State.editor.filter === 'grayscale') ctx.filter = 'grayscale(100%)';
+  ctx.drawImage(img, 0, 0);
+  ctx.filter = 'none';
+  
+  const scale = img.width / $('editor-canvas-container').getBoundingClientRect().width;
+  
+  State.editor.layers.forEach(layer => {
+    ctx.save();
+    const x = (layer.x / 100) * img.width;
+    const y = (layer.y / 100) * img.height;
+    ctx.translate(x, y);
+    ctx.rotate(layer.rotation * Math.PI / 180);
+    
+    if (layer.type === 'text') {
+      ctx.font = `bold ${layer.fontSize * scale}px ${layer.font}`;
+      ctx.fillStyle = layer.color;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.strokeStyle = 'black'; ctx.lineWidth = 4 * scale;
+      ctx.strokeText(layer.content, 0, 0); ctx.fillText(layer.content, 0, 0);
+    } else if (layer.type === 'emoji') {
+      ctx.font = `${layer.fontSize * scale}px Arial`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(layer.content, 0, 0);
+    } else if (layer.type === 'rect' || layer.type === 'circle') {
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.strokeStyle = 'white'; ctx.lineWidth = 4 * scale;
+      if (layer.type === 'rect') {
+        ctx.fillRect(-layer.width*scale/2, -layer.height*scale/2, layer.width*scale, layer.height*scale);
+        ctx.strokeRect(-layer.width*scale/2, -layer.height*scale/2, layer.width*scale, layer.height*scale);
+      } else {
+        ctx.beginPath(); ctx.arc(0, 0, layer.width*scale/2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  });
+  return canvas.toDataURL('image/png');
+}
+
+/* ================= UTILS & DB ================= */
+function toast(msg, type = 'info', duration = 3000) {
+  const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = msg;
+  $('toasts').appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, duration);
+}
+
+function openModal(id) { $(id).style.display = 'flex'; }
+function closeModal(id) { $(id).style.display = 'none'; }
+function downloadImg(src) { const a = document.createElement('a'); a.href = src; a.download = `image.png`; a.click(); }
+
+function updateSettingsUI() { $('setting-api-key').value = State.agnesKey; }
+
+function saveSettings() {
+  State.agnesKey = $('setting-api-key').value.trim();
+  localStorage.setItem('pf_agnes_key', State.agnesKey);
+  closeModal('settings-modal');
+  toast('Clé API sauvegardée localement !', 'success');
+}
+
+let db;
+const dbReq = indexedDB.open('PixelForgeV12', 1);
+dbReq.onupgradeneeded = (e) => { db = e.target.result; if (!db.objectStoreNames.contains('images')) db.createObjectStore('images', { keyPath: 'id' }); };
+dbReq.onsuccess = (e) => {
+  db = e.target.result;
+  db.transaction('images', 'readonly').objectStore('images').getAll().onsuccess = (ev) => {
+    State.gallery = ev.target.result.sort((a,b) => b.time - a.time);
+    renderGallery();
+  };
+};
+function saveToDB(img) { if(db) db.transaction('images', 'readwrite').objectStore('images').put(img); }
+function deleteFromDB(id) { if(db) db.transaction('images', 'readwrite').objectStore('images').delete(id); }
+
+init();
+</script>
+</body>
+</html>
