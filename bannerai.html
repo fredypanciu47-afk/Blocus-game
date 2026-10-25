@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banner AI — Agnes AI / Pollinations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@700;900&family=Playfair+Display:wght@700;900&family=Permanent+Marker&family=Righteous&family=Space+Grotesk:wght@400;700&family=Unbounded:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0814;--bg-2:#0f0c1c;--surface:#151027;--surface-2:#1a1430;
+  --border:#231a3f;--border-hi:#3a2a5f;
+  --accent:#ff2e63;--accent-2:#ff5c8a;--gold:#ffd23f;--violet:#9d7bff;
+  --teal:#4ecdc4;--success:#4ade80;--danger:#ff4757;--warn:#ffb347;
+  --text:#f4f2ff;--text-dim:#8f88b0;--text-faint:#5a5178;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse at 15% 10%,rgba(255,46,99,.14) 0%,transparent 45%),
+  radial-gradient(ellipse at 85% 90%,rgba(157,123,255,.14) 0%,transparent 45%);
+  pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  opacity:.03;pointer-events:none;z-index:1;mix-blend-mode:overlay}
+
+.app{position:relative;z-index:2;display:grid;grid-template-columns:440px 1fr;height:100vh}
+
+/* ============ PANEL ============ */
+.panel{background:linear-gradient(180deg,var(--bg-2) 0%,#08060f 100%);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-brand{font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.05rem;letter-spacing:-.02em;background:linear-gradient(135deg,#fff 20%,var(--accent) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.1}
+.panel-brand span{display:block;font-family:'Inter',sans-serif;font-size:.52rem;font-weight:800;letter-spacing:.35em;color:var(--text-dim);margin-top:3px;-webkit-text-fill-color:var(--text-dim)}
+.status-badge{font-size:.55rem;font-weight:800;letter-spacing:.06em;padding:5px 9px;border-radius:6px;display:flex;align-items:center;gap:5px;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);color:var(--success);text-align:right;max-width:150px}
+.status-badge .dot{width:6px;height:6px;background:var(--success);border-radius:50%;box-shadow:0 0 8px var(--success);animation:pulse 1.5s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.panel-body{flex:1;overflow-y:auto;padding:16px 22px 20px}
+.panel-body::-webkit-scrollbar{width:6px}
+.panel-body::-webkit-scrollbar-track{background:transparent}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.section{margin-bottom:20px}
+.section-title{font-size:.6rem;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.section-title .count{font-size:.52rem;color:var(--text-faint);letter-spacing:.1em;font-weight:700}
+.section-title .count.warn{color:var(--warn)}
+.section-hint{font-size:.62rem;color:var(--text-faint);font-weight:600;line-height:1.5;margin-bottom:8px;font-style:italic}
+
+/* API key */
+.api-key-box{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px}
+.api-key-box.has-key{border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.04)}
+.api-key-row{display:flex;gap:8px}
+.api-key-row input{flex:1;font-family:monospace;font-size:.72rem}
+.api-key-hint{font-size:.55rem;color:var(--text-faint);margin-top:6px;line-height:1.4}
+.api-key-hint a{color:var(--accent);text-decoration:none}
+.api-key-hint a:hover{text-decoration:underline}
+
+/* Prompt */
+.prompt-wrap{position:relative}
+.prompt-input{width:100%;min-height:130px;resize:vertical;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);padding:12px 14px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:500;line-height:1.5;outline:none;transition:border-color .15s}
+.prompt-input:focus{border-color:var(--accent)}
+.prompt-input::placeholder{color:var(--text-faint)}
+
+.suggestions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.suggestion-chip{background:var(--surface);border:1px solid var(--border);color:var(--text-dim);padding:5px 10px;border-radius:100px;font-size:.6rem;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit;letter-spacing:.02em}
+.suggestion-chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(255,46,99,.08)}
+
+.presets-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.preset-card{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 6px;cursor:pointer;transition:all .15s;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text);position:relative;overflow:hidden}
+.preset-card::before{content:'';position:absolute;inset:0;opacity:.2;pointer-events:none;transition:opacity .2s}
+.preset-card[data-style="gaming"]::before{background:linear-gradient(135deg,#ff2e63,#9d7bff)}
+.preset-card[data-style="cinematic"]::before{background:linear-gradient(135deg,#ff6b35,#1a0a14)}
+.preset-card[data-style="minimal"]::before{background:linear-gradient(135deg,#f5f5f5,#b0b0b0)}
+.preset-card[data-style="cyberpunk"]::before{background:linear-gradient(135deg,#ff2e63,#4ecdc4)}
+.preset-card[data-style="music"]::before{background:linear-gradient(135deg,#9d7bff,#ff2e63)}
+.preset-card[data-style="nature"]::before{background:linear-gradient(135deg,#4ade80,#4ecdc4)}
+.preset-card:hover{border-color:var(--border-hi);transform:translateY(-1px)}
+.preset-card.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,210,63,.2)}
+.preset-card.active::before{opacity:.45}
+.preset-card .icon{font-size:1.15rem;position:relative;z-index:1}
+.preset-card .name{font-size:.55rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;position:relative;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.field-label{font-size:.6rem;font-weight:800;color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.field-label .range-value{color:var(--gold);font-family:'Unbounded',sans-serif;font-weight:900;font-size:.6rem}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+input[type="text"],select,textarea{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;color:var(--text);padding:9px 12px;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:600;width:100%;outline:none;transition:border-color .15s}
+input[type="text"]:focus,select:focus,textarea:focus{border-color:var(--accent)}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%238f88b0' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+input[type="color"]{width:100%;height:34px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;background:var(--surface);padding:2px;outline:none}
+input[type="color"]::-webkit-color-swatch-wrapper{padding:0;border-radius:5px;overflow:hidden}
+input[type="color"]::-webkit-color-swatch{border:none;border-radius:5px}
+input[type="range"]{width:100%;height:4px;background:var(--border);border-radius:2px;outline:none;-webkit-appearance:none;margin:6px 0}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--surface);box-shadow:0 0 8px rgba(255,46,99,.5)}
+input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--surface)}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+.toggle-label{font-size:.72rem;font-weight:700;color:var(--text)}
+.toggle{width:40px;height:22px;background:var(--border);border-radius:11px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s}
+.toggle.on{background:var(--accent)}
+.toggle.on::after{transform:translateX(18px)}
+
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:6px}
+.emoji-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:6px;cursor:pointer;font-size:1.05rem;transition:all .15s;font-family:inherit;display:flex;align-items:center;justify-content:center}
+.emoji-btn:hover{border-color:var(--border-hi);transform:scale(1.08)}
+.emoji-btn.active{border-color:var(--gold);background:rgba(255,210,63,.1)}
+
+.panel-actions{padding:16px 22px;border-top:1px solid var(--border);background:var(--bg-2);display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.btn{border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:800;letter-spacing:.05em;transition:transform .15s,box-shadow .15s,background .2s;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.btn:active{transform:scale(.98) translateY(1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-generate{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;padding:15px;border-radius:11px;font-size:.85rem;text-transform:uppercase;box-shadow:0 5px 0 #b81e46,0 10px 25px rgba(255,46,99,.35);letter-spacing:.08em}
+.btn-generate:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 0 #b81e46,0 12px 30px rgba(255,46,99,.45)}
+.btn-export{background:linear-gradient(135deg,var(--gold),#ffb347);color:#1a0a14;padding:13px;border-radius:11px;font-size:.78rem;text-transform:uppercase;box-shadow:0 4px 0 #c99a1a;letter-spacing:.08em}
+.btn-export:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 0 #c99a1a,0 10px 25px rgba(255,210,63,.35)}
+.btn-export:disabled{background:var(--surface);color:var(--text-dim);box-shadow:none}
+
+/* ============ PREVIEW ============ */
+.preview{position:relative;display:flex;align-items:center;justify-content:center;padding:40px;overflow:hidden;background:radial-gradient(ellipse at 50% 0%,rgba(255,46,99,.06) 0%,transparent 50%),#050308}
+.preview::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);background-size:40px 40px}
+.stage{position:relative;max-width:100%;max-height:100%;aspect-ratio:16/9;box-shadow:0 30px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.08);border-radius:14px;overflow:hidden;background:#000}
+.stage canvas{display:block;width:100%;height:100%;object-fit:contain}
+.safe-zone{position:absolute;left:19.8%;top:35.31%;width:60.39%;height:29.38%;border:2px dashed var(--gold);border-radius:4px;box-shadow:0 0 0 99999px rgba(0,0,0,.55);pointer-events:none;opacity:0;transition:opacity .2s;z-index:5}
+.safe-zone.visible{opacity:1}
+.safe-zone::after{content:'SAFE ZONE · visible partout';position:absolute;top:-24px;left:0;font-size:.6rem;font-weight:800;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.8);white-space:nowrap}
+
+.loading-overlay{position:absolute;inset:0;background:rgba(5,3,8,.85);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;gap:18px}
+.loading-overlay.active{opacity:1;visibility:visible}
+.spinner{width:64px;height:64px;border:4px solid rgba(255,46,99,.15);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'Unbounded',sans-serif;font-weight:900;font-size:1rem;color:var(--text);letter-spacing:.05em}
+.loading-sub{font-size:.72rem;color:var(--text-dim);font-weight:600;max-width:340px;text-align:center;line-height:1.5;padding:0 20px}
+.loading-progress{width:280px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;position:relative}
+.loading-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:2px;transition:width .4s;box-shadow:0 0 12px rgba(255,46,99,.6)}
+
+.floating-bar{position:absolute;top:20px;right:20px;display:flex;gap:8px;z-index:10}
+.float-btn{width:38px;height:38px;background:rgba(15,12,28,.85);backdrop-filter:blur(10px);border:1.5px solid var(--border);border-radius:10px;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .15s}
+.float-btn:hover:not(:disabled){background:rgba(30,24,52,.95);border-color:var(--border-hi);transform:scale(1.05)}
+.float-btn:disabled{opacity:.35;cursor:not-allowed}
+.float-btn.on{background:rgba(255,210,63,.15);border-color:var(--gold);color:var(--gold)}
+.float-btn.danger:hover:not(:disabled){background:rgba(255,71,87,.15);border-color:var(--danger);color:var(--danger)}
+
+.info-bar{position:absolute;bottom:20px;left:20px;background:rgba(15,12,28,.85);backdrop-filter:blur(10px);border:1.5px solid var(--border);border-radius:10px;padding:7px 14px;font-size:.6rem;font-weight:800;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase;display:flex;align-items:center;gap:10px;z-index:10;flex-wrap:wrap;max-width:calc(100% - 200px)}
+.info-bar strong{color:var(--gold)}
+.info-bar .sep{width:3px;height:3px;background:var(--text-faint);border-radius:50%}
+
+.history-bar{position:absolute;bottom:20px;right:20px;display:flex;gap:6px;z-index:10;max-width:50%;overflow-x:auto}
+.history-thumb{width:60px;height:34px;border-radius:6px;overflow:hidden;cursor:pointer;border:1.5px solid var(--border);background:#000;transition:all .15s;object-fit:cover;flex-shrink:0}
+.history-thumb:hover{border-color:var(--accent);transform:scale(1.08)}
+.history-thumb.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,210,63,.3)}
+
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-100px);background:linear-gradient(135deg,var(--gold),var(--accent));color:var(--bg);padding:12px 22px;border-radius:12px;font-weight:900;font-size:.8rem;box-shadow:0 10px 30px rgba(255,210,63,.4);z-index:1000;transition:transform .4s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:10px;pointer-events:none;letter-spacing:.02em;max-width:90vw}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.error{background:linear-gradient(135deg,var(--danger),#b81e46);color:#fff;box-shadow:0 10px 30px rgba(255,71,87,.4)}
+.toast.info{background:linear-gradient(135deg,#4ecdc4,#9d7bff);color:#fff;box-shadow:0 10px 30px rgba(78,205,196,.4)}
+.toast .icon{font-size:1.3rem}
+
+.empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:40px;z-index:3;pointer-events:none}
+.empty-state.hidden{display:none}
+.empty-icon{font-size:5rem;opacity:.5;animation:floatIcon 3s ease-in-out infinite}
+@keyframes floatIcon{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.empty-title{font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.5rem;color:var(--text);letter-spacing:-.02em}
+.empty-desc{font-size:.85rem;color:var(--text-dim);max-width:420px;line-height:1.6;font-weight:500}
+.empty-desc strong{color:var(--gold)}
+
+@media (max-width:1000px){.app{grid-template-columns:380px 1fr}.panel-body{padding:14px 16px}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="panel">
+    <div class="panel-header">
+      <div class="panel-brand">
+        BANNER AI
+        <span>Agnes AI · Pollinations</span>
+      </div>
+      <div class="status-badge" id="statusBadge"><span class="dot"></span><span id="statusText">AGNES AI</span></div>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- CLÉ API AGNES -->
+      <div class="section">
+        <div class="section-title"><span>🔑 Clé Agnes AI</span></div>
+        <div class="api-key-box" id="apiKeyBox">
+          <div class="api-key-row">
+            <input type="text" id="apiKeyInput" placeholder="sk-..." autocomplete="off" spellcheck="false">
+            <button class="btn" id="saveKeyBtn" style="width:auto;padding:0 14px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:.7rem;text-transform:uppercase">OK</button>
+          </div>
+          <div class="api-key-hint">
+            🔗 Clé gratuite sur <a href="https://agnes-ai.com" target="_blank">agnes-ai.com</a> → inscription → Console → API Keys.
+            <br>Sans clé : fallback automatique sur Pollinations (<code style="color:var(--gold)">flux</code>).
+          </div>
+        </div>
+      </div>
+
+      <!-- PROMPT -->
+      <div class="section">
+        <div class="section-title">
+          <span>🪄 Décris ta bannière</span>
+          <span class="count" id="promptCount">0 / 500</span>
+        </div>
+        <div class="section-hint">✍️ Ce prompt décrit l'IMAGE. Agnes AI suit très bien les descriptions détaillées.</div>
+        <div class="prompt-wrap">
+          <textarea class="prompt-input" id="promptInput" maxlength="500" placeholder="Décris précisément : sujet, style, éclairage, couleurs, composition, ambiance. Ex : Un guerrier cyberpunk debout sous une pluie battante, néons rouges et violets reflétés sur son armure, night city en arrière-plan flou, éclairs, style digital art ultra détaillé, composition cinématographique, espace sombre à gauche pour du texte"></textarea>
+        </div>
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+
+      <!-- PRESETS -->
+      <div class="section">
+        <div class="section-title"><span>🎨 Styles rapides</span></div>
+        <div class="presets-grid" id="presetsGrid"></div>
+      </div>
+
+      <!-- OPTIONS -->
+      <div class="section">
+        <div class="section-title"><span>⚙️ Paramètres</span></div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Format</label>
+            <select id="sizeSelect">
+              <option value="1280x720">1280 × 720</option>
+              <option value="1536x864">1536 × 864</option>
+              <option value="1920x1080" selected>1920 × 1080</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Seed</label>
+            <input type="text" id="seedInput" value="" placeholder="vide = aléatoire">
+          </div>
+        </div>
+        <div class="section-hint">💡 Laisse le seed vide pour varier. Remplis-le pour reproduire.</div>
+        <div class="toggle-row">
+          <span class="toggle-label">Sans watermark</span>
+          <button class="toggle on" id="nologoToggle"></button>
+        </div>
+      </div>
+
+      <!-- OVERLAY -->
+      <div class="section">
+        <div class="section-title">
+          <span>✍️ Overlay texte</span>
+          <span class="count" id="overlayCount">0 / 3</span>
+        </div>
+        <div class="section-hint">📝 Ce texte s'ajoute <strong>par-dessus</strong> l'image générée.</div>
+        <div class="field">
+          <input type="text" id="titleText" placeholder="Titre">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Police</label>
+            <select id="titleFont">
+              <option value="Unbounded">Unbounded</option>
+              <option value="Bebas Neue">Bebas Neue</option>
+              <option value="Playfair Display">Playfair</option>
+              <option value="Orbitron">Orbitron</option>
+              <option value="Permanent Marker">Marker</option>
+              <option value="Space Grotesk">Space Grotesk</option>
+              <option value="Righteous">Righteous</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Couleur</label>
+            <input type="color" id="titleColor" value="#ffffff">
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Taille <span class="range-value" id="titleSizeVal">180px</span></label>
+          <input type="range" id="titleSize" min="60" max="320" value="180">
+        </div>
+        <div class="field">
+          <label class="field-label">Position Y <span class="range-value" id="titleYVal">50%</span></label>
+          <input type="range" id="titleY" min="20" max="80" value="50">
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Glow</span>
+          <button class="toggle on" id="titleGlow"></button>
+        </div>
+
+        <div class="field" style="margin-top:10px">
+          <input type="text" id="subtitleText" placeholder="Sous-titre">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Police sub</label>
+            <select id="subtitleFont">
+              <option value="Inter">Inter</option>
+              <option value="Bebas Neue">Bebas Neue</option>
+              <option value="Unbounded">Unbounded</option>
+              <option value="Orbitron">Orbitron</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Couleur</label>
+            <input type="color" id="subtitleColor" value="#ffd23f">
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Taille sub <span class="range-value" id="subtitleSizeVal">56px</span></label>
+          <input type="range" id="subtitleSize" min="20" max="120" value="56">
+        </div>
+
+        <div class="field" style="margin-top:10px">
+          <label class="field-label">Émoji</label>
+          <div class="field-row">
+            <input type="text" id="emojiText" value="" maxlength="4" placeholder="🔥">
+            <select id="emojiPos">
+              <option value="none">Aucun</option>
+              <option value="tl">Haut gauche</option>
+              <option value="tr">Haut droite</option>
+              <option value="bl">Bas gauche</option>
+              <option value="br" selected>Bas droite</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Taille émoji <span class="range-value" id="emojiSizeVal">220px</span></label>
+          <input type="range" id="emojiSize" min="60" max="500" value="220">
+        </div>
+        <div class="emoji-grid" id="emojiGrid"></div>
+      </div>
+
+    </div>
+
+    <div class="panel-actions">
+      <button class="btn btn-generate" id="generateBtn">✨ Générer l'image IA</button>
+      <button class="btn btn-export" id="exportBtn" disabled>⬇ Télécharger PNG 2560×1440</button>
+    </div>
+  </aside>
+
+  <main class="preview" id="preview">
+    <div class="stage" id="stage">
+      <canvas id="canvas" width="2560" height="1440"></canvas>
+      <div class="safe-zone" id="safeZone"></div>
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🖼️</div>
+        <div class="empty-title">Agnes AI · Prêt</div>
+        <div class="empty-desc">Ajoute ta clé Agnes AI (gratuite) pour la meilleure qualité, ou génère directement avec <strong>Pollinations</strong>. Décris précisément ta scène pour un résultat cohérent.</div>
+      </div>
+
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Génération…</div>
+        <div class="loading-sub" id="loadingSub">Agnes AI traite ton prompt.</div>
+        <div class="loading-progress"><div class="loading-progress-fill" id="loadingProgress"></div></div>
+      </div>
+    </div>
+
+    <div class="floating-bar">
+      <button class="float-btn" id="safeBtn" title="Safe zone">📐</button>
+      <button class="float-btn" id="regenBtn" title="Variation" disabled>🔄</button>
+      <button class="float-btn danger" id="clearBtn" title="Effacer">🗑️</button>
+    </div>
+
+    <div class="info-bar">
+      <span>YOUTUBE</span>
+      <span class="sep"></span>
+      <strong>2560 × 1440</strong>
+      <span class="sep"></span>
+      <span id="engineInfo">—</span>
+      <span class="sep"></span>
+      <span id="seedInfo">Seed : —</span>
+    </div>
+
+    <div class="history-bar" id="historyBar"></div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONSTANTES
+   ============================================================ */
+const W = 2560, H = 1440;
+const AGNES_URL = 'https://apihub.agnes-ai.com/v1/images/generations';
+const POLLINATIONS_URL = 'https://image.pollinations.ai/prompt/';
+const MAX_RETRIES = 3;
+const FETCH_TIMEOUT = 120000;
+
+const S = {
+  apiKey: localStorage.getItem('agnes_api_key') || '',
+  stylePreset: null,
+  width: 1920,
+  height: 1080,
+  seed: null,
+  nologo: true,
+  titleText: '',
+  titleFont: 'Unbounded',
+  titleSize: 180,
+  titleColor: '#ffffff',
+  titleY: 0.5,
+  titleGlow: true,
+  subtitleText: '',
+  subtitleFont: 'Inter',
+  subtitleSize: 56,
+  subtitleColor: '#ffd23f',
+  emoji: '',
+  emojiPos: 'br',
+  emojiSize: 220,
+  showSafe: false,
+  generatedImage: null,
+  currentSeed: null,
+  lastPrompt: '',
+  lastImageHash: null,
+  history: [],
+  engine: '—'
+};
+
+/* ============================================================
+   PRESETS & SUGGESTIONS
+   ============================================================ */
+const STYLE_PRESETS = {
+  gaming:   { icon:'🎮', name:'Gaming',    prompt:'épique, style digital art, néons colorés, composition dynamique, ultra détaillé, éclairage dramatique' },
+  cinematic:{ icon:'🎬', name:'Cinéma',    prompt:'cinématographique, éclairage volumétrique, profondeur de champ, color grading film, ultra réaliste' },
+  minimal:  { icon:'✦',  name:'Minimal',   prompt:'minimaliste, fond épuré, composition géométrique, couleurs pastel, design scandinave' },
+  cyberpunk:{ icon:'⚡',  name:'Cyber',     prompt:'cyberpunk, night city, néons rouges et violets, ambiance futuriste, pluie, éclairs lumineux' },
+  music:    { icon:'🎧', name:'Musique',   prompt:'ambiance musicale, formes fluides, ondes sonores, dégradés colorés, énergie vibrante' },
+  nature:   { icon:'🌿', name:'Nature',    prompt:'paysage naturel, lumière dorée, brume, montagnes, forêt luxuriante, atmosphère paisible' }
+};
+
+const SUGGESTIONS = [
+  'Guerrier cyberpunk sous la pluie, néons rouges',
+  'Vaisseau spatial au-dessus de Tokyo de nuit',
+  'Dragon de glace cristallin, ciel auroral',
+  'Setup gaming RGB néon avec nébuleuse',
+  'DJ futuriste sur scène avec laser show',
+  'Montagne enneigée au lever du soleil, brume dorée'
+];
+
+const EMOJI_OPTIONS = ['🔥','🎮','🎧','⚡','💎','👑','🚀','✨','🎯','💥','🌟','🎬','📸','🍕','☕','🌿','🌅','🎨','📱','🤖'];
+
+/* ============================================================
+   CANVAS
+   ============================================================ */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+/* ============================================================
+   UI BUILD
+   ============================================================ */
+function buildPresets() {
+  const grid = document.getElementById('presetsGrid');
+  grid.innerHTML = Object.entries(STYLE_PRESETS).map(([id, p]) => `
+    <button class="preset-card" data-style="${id}">
+      <span class="icon">${p.icon}</span>
+      <span class="name">${p.name}</span>
+    </button>
+  `).join('');
+  grid.querySelectorAll('.preset-card').forEach(card => {
+    card.addEventListener('click', () => applyStylePreset(card.dataset.style));
+  });
+}
+
+function buildSuggestions() {
+  const wrap = document.getElementById('suggestions');
+  wrap.innerHTML = SUGGESTIONS.map(s => `<button class="suggestion-chip">${s}</button>`).join('');
+  wrap.querySelectorAll('.suggestion-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.getElementById('promptInput').value = chip.textContent;
+      updatePromptCount();
+    });
+  });
+}
+
+function buildEmojiGrid() {
+  const grid = document.getElementById('emojiGrid');
+  grid.innerHTML = EMOJI_OPTIONS.map(e => `<button class="emoji-btn" data-emoji="${e}">${e}</button>`).join('');
+  grid.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const emoji = btn.dataset.emoji;
+      const current = document.getElementById('emojiText').value;
+      const newVal = current === emoji ? '' : emoji;
+      document.getElementById('emojiText').value = newVal;
+      S.emoji = newVal;
+      grid.querySelectorAll('.emoji-btn').forEach(b => b.classList.toggle('active', b.dataset.emoji === newVal));
+      updateOverlayCount();
+      redraw();
+    });
+  });
+}
+
+function applyStylePreset(id) {
+  const preset = STYLE_PRESETS[id];
+  const input = document.getElementById('promptInput');
+  let base = input.value.trim();
+  if (S.stylePreset && STYLE_PRESETS[S.stylePreset]) {
+    const oldPrompt = STYLE_PRESETS[S.stylePreset].prompt;
+    base = base.replace(new RegExp(',?\\s*' + oldPrompt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '').trim();
+  }
+  input.value = (base ? `${base}, ${preset.prompt}` : preset.prompt).slice(0, 500);
+  S.stylePreset = id;
+  document.querySelectorAll('.preset-card').forEach(c => c.classList.toggle('active', c.dataset.style === id));
+  updatePromptCount();
+}
+
+function updatePromptCount() {
+  const count = document.getElementById('promptInput').value.length;
+  const el = document.getElementById('promptCount');
+  el.textContent = `${count} / 500`;
+  el.classList.toggle('warn', count > 450);
+}
+
+function updateOverlayCount() {
+  let n = 0;
+  if (document.getElementById('titleText').value.trim()) n++;
+  if (document.getElementById('subtitleText').value.trim()) n++;
+  if (document.getElementById('emojiText').value.trim()) n++;
+  document.getElementById('overlayCount').textContent = `${n} / 3`;
+}
+
+/* ============================================================
+   BINDINGS
+   ============================================================ */
+function bind() {
+  document.getElementById('promptInput').addEventListener('input', updatePromptCount);
+  document.getElementById('sizeSelect').addEventListener('change', e => {
+    const [w, h] = e.target.value.split('x').map(Number);
+    S.width = w; S.height = h;
+  });
+  document.getElementById('seedInput').addEventListener('change', e => {
+    const v = e.target.value.trim();
+    S.seed = (v === '' || v === 'random') ? null : parseInt(v) || null;
+  });
+  document.getElementById('nologoToggle').addEventListener('click', e => {
+    S.nologo = !S.nologo;
+    e.target.classList.toggle('on', S.nologo);
+  });
+
+  const apiInput = document.getElementById('apiKeyInput');
+  if (S.apiKey) apiInput.value = S.apiKey;
+  document.getElementById('saveKeyBtn').addEventListener('click', () => {
+    const v = apiInput.value.trim();
+    S.apiKey = v;
+    if (v) localStorage.setItem('agnes_api_key', v);
+    else localStorage.removeItem('agnes_api_key');
+    updateStatusBadge();
+    showToast(v ? '🔑 Clé Agnes AI enregistrée' : '🔑 Clé supprimée — fallback Pollinations', v ? 'success' : 'info');
+  });
+
+  document.getElementById('titleText').addEventListener('input', e => { S.titleText = e.target.value; updateOverlayCount(); redraw(); });
+  document.getElementById('titleFont').addEventListener('change', e => { S.titleFont = e.target.value; redraw(); });
+  document.getElementById('titleColor').addEventListener('input', e => { S.titleColor = e.target.value; redraw(); });
+  document.getElementById('titleSize').addEventListener('input', e => {
+    S.titleSize = parseInt(e.target.value);
+    document.getElementById('titleSizeVal').textContent = S.titleSize + 'px';
+    redraw();
+  });
+  document.getElementById('titleY').addEventListener('input', e => {
+    S.titleY = parseInt(e.target.value) / 100;
+    document.getElementById('titleYVal').textContent = e.target.value + '%';
+    redraw();
+  });
+  document.getElementById('titleGlow').addEventListener('click', e => { S.titleGlow = !S.titleGlow; e.target.classList.toggle('on', S.titleGlow); redraw(); });
+
+  document.getElementById('subtitleText').addEventListener('input', e => { S.subtitleText = e.target.value; updateOverlayCount(); redraw(); });
+  document.getElementById('subtitleFont').addEventListener('change', e => { S.subtitleFont = e.target.value; redraw(); });
+  document.getElementById('subtitleColor').addEventListener('input', e => { S.subtitleColor = e.target.value; redraw(); });
+  document.getElementById('subtitleSize').addEventListener('input', e => {
+    S.subtitleSize = parseInt(e.target.value);
+    document.getElementById('subtitleSizeVal').textContent = S.subtitleSize + 'px';
+    redraw();
+  });
+
+  document.getElementById('emojiText').addEventListener('input', e => {
+    S.emoji = e.target.value;
+    document.querySelectorAll('.emoji-btn').forEach(b => b.classList.toggle('active', b.dataset.emoji === S.emoji));
+    updateOverlayCount();
+    redraw();
+  });
+  document.getElementById('emojiPos').addEventListener('change', e => { S.emojiPos = e.target.value; redraw(); });
+  document.getElementById('emojiSize').addEventListener('input', e => {
+    S.emojiSize = parseInt(e.target.value);
+    document.getElementById('emojiSizeVal').textContent = S.emojiSize + 'px';
+    redraw();
+  });
+
+  document.getElementById('safeBtn').addEventListener('click', () => {
+    S.showSafe = !S.showSafe;
+    document.getElementById('safeZone').classList.toggle('visible', S.showSafe);
+    document.getElementById('safeBtn').classList.toggle('on', S.showSafe);
+  });
+
+  document.getElementById('generateBtn').addEventListener('click', () => generate(false));
+  document.getElementById('regenBtn').addEventListener('click', () => generate(true));
+  document.getElementById('clearBtn').addEventListener('click', clearImage);
+  document.getElementById('exportBtn').addEventListener('click', exportPNG);
+
+  window.addEventListener('resize', resizeStage);
+  new ResizeObserver(resizeStage).observe(document.getElementById('preview'));
+  updateStatusBadge();
+}
+
+function updateStatusBadge() {
+  const badge = document.getElementById('statusBadge');
+  const text = document.getElementById('statusText');
+  if (S.apiKey) {
+    text.textContent = 'AGNES AI';
+    badge.style.background = 'rgba(74,222,128,.12)';
+    badge.style.borderColor = 'rgba(74,222,128,.3)';
+    badge.style.color = 'var(--success)';
+  } else {
+    text.textContent = 'POLLINATIONS · flux';
+    badge.style.background = 'rgba(255,210,63,.12)';
+    badge.style.borderColor = 'rgba(255,210,63,.3)';
+    badge.style.color = 'var(--gold)';
+  }
+}
+
+function resizeStage() {
+  const preview = document.getElementById('preview');
+  const stage = document.getElementById('stage');
+  const availW = preview.clientWidth - 80;
+  const availH = preview.clientHeight - 80;
+  const ratio = 16 / 9;
+  let w = availW, h = w / ratio;
+  if (h > availH) { h = availH; w = h * ratio; }
+  stage.style.width = Math.max(100, w) + 'px';
+  stage.style.height = Math.max(56, h) + 'px';
+}
+
+/* ============================================================
+   GÉNÉRATION
+   ============================================================ */
+async function generate(forceNewSeed) {
+  const promptInput = document.getElementById('promptInput');
+  const prompt = promptInput.value.trim();
+  if (!prompt) {
+    showToast('Écris d\'abord une description !', 'error');
+    promptInput.focus();
+    return;
+  }
+
+  const normalized = normalizePrompt(prompt);
+  if (!forceNewSeed && normalized === S.lastPrompt && S.generatedImage) {
+    showToast('💡 Même prompt — clique 🔄 pour une variation', 'info');
+  }
+
+  const genBtn = document.getElementById('generateBtn');
+  const regenBtn = document.getElementById('regenBtn');
+  genBtn.disabled = true;
+  regenBtn.disabled = true;
+  showLoading(true);
+
+  let seed;
+  if (forceNewSeed) seed = Math.floor(Math.random() * 1e9);
+  else if (S.seed !== null) seed = S.seed;
+  else seed = Math.floor(Math.random() * 1e9);
+  S.currentSeed = seed;
+
+  let progressVal = 0;
+  const progressFill = document.getElementById('loadingProgress');
+  const loadingSub = document.getElementById('loadingSub');
+  const loadingText = document.getElementById('loadingText');
+
+  const startTime = Date.now();
+  const progressInterval = setInterval(() => {
+    const elapsed = (Date.now() - startTime) / 1000;
+    const waitProgress = Math.min(35, (elapsed / 40) * 35);
+    progressVal = Math.max(progressVal, waitProgress);
+    progressFill.style.width = progressVal + '%';
+    loadingSub.textContent = progressVal < 15 ? 'Agnes AI analyse ton prompt…' : progressVal < 25 ? 'Composition de la scène…' : 'Rendu des détails…';
+  }, 500);
+
+  let success = false;
+  let lastErr = null;
+  let finalBlob = null;
+  let usedEngine = '';
+
+  // === AGNES AI EN PRIORITÉ ===
+  if (S.apiKey) {
+    try {
+      loadingText.textContent = 'Agnes AI…';
+      const res = await callAgnes(prompt, seed, (loaded, total) => {
+        if (total > 0) {
+          const dl = 35 + (loaded / total) * 55;
+          progressVal = Math.max(progressVal, dl);
+          progressFill.style.width = progressVal + '%';
+        }
+      });
+      finalBlob = res.blob;
+      usedEngine = 'Agnes AI · 2.0 Flash';
+      success = true;
+    } catch (err) {
+      console.warn('[Agnes] échec, fallback Pollinations:', err.message);
+      loadingText.textContent = 'Fallback Pollinations…';
+      showToast('⚠️ Agnes indisponible, fallback Pollinations', 'info');
+    }
+  }
+
+  // === FALLBACK POLLINATIONS ===
+  if (!success) {
+    try {
+      loadingText.textContent = 'Pollinations flux…';
+      const url = buildPollinationsUrl(prompt, seed);
+      finalBlob = await fetchImageWithProgress(url, (loaded, total) => {
+        if (total > 0) {
+          const dl = 35 + (loaded / total) * 55;
+          progressVal = Math.max(progressVal, dl);
+          progressFill.style.width = progressVal + '%';
+        }
+      });
+      usedEngine = 'Pollinations · flux';
+      success = true;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  clearInterval(progressInterval);
+
+  if (!success) {
+    showLoading(false);
+    genBtn.disabled = false;
+    if (S.generatedImage) regenBtn.disabled = false;
+    showToast('❌ Échec. ' + (lastErr?.message || 'Réessaie.'), 'error');
+    return;
+  }
+
+  const hash = await hashBlob(finalBlob);
+  if (hash === S.lastImageHash && S.generatedImage) {
+    try {
+      const retrySeed = Math.floor(Math.random() * 1e9);
+      let retryBlob;
+      if (S.apiKey) {
+        try { retryBlob = (await callAgnes(prompt, retrySeed, () => {})).blob; }
+        catch { retryBlob = await fetchImageWithProgress(buildPollinationsUrl(prompt, retrySeed), () => {}); }
+      } else {
+        retryBlob = await fetchImageWithProgress(buildPollinationsUrl(prompt, retrySeed), () => {});
+      }
+      const retryHash = await hashBlob(retryBlob);
+      if (retryHash !== hash) {
+        finalBlob = retryBlob;
+        S.currentSeed = retrySeed;
+      }
+    } catch {}
+  }
+
+  S.lastImageHash = await hashBlob(finalBlob);
+  progressFill.style.width = '100%';
+  loadingText.textContent = 'Composition…';
+
+  try {
+    const img = await blobToImage(finalBlob);
+    S.generatedImage = img;
+    S.lastPrompt = normalized;
+    S.engine = usedEngine;
+
+    document.getElementById('seedInfo').textContent = `Seed : ${S.currentSeed}`;
+    document.getElementById('engineInfo').textContent = usedEngine;
+    document.getElementById('emptyState').classList.add('hidden');
+    document.getElementById('exportBtn').disabled = false;
+    regenBtn.disabled = false;
+
+    redraw();
+    addToHistory(URL.createObjectURL(finalBlob), prompt, S.currentSeed, usedEngine);
+
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    setTimeout(() => {
+      showLoading(false);
+      showToast(`✅ ${usedEngine} · ${elapsed}s · seed ${S.currentSeed}`);
+    }, 300);
+  } catch (err) {
+    console.error(err);
+    showLoading(false);
+    showToast('❌ Impossible de décoder l\'image.', 'error');
+  } finally {
+    genBtn.disabled = false;
+  }
+}
+
+/* ============================================================
+   AGNES AI API
+   ============================================================ */
+async function callAgnes(prompt, seed, onProgress) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+
+  try {
+    const body = {
+      model: 'agnes-image-2.0-flash',
+      prompt: prompt,
+      size: `${S.width}x${S.height}`,
+      extra_body: {
+        response_format: 'b64_json'
+      }
+    };
+
+    const res = await fetch(AGNES_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${S.apiKey}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`Agnes ${res.status}: ${errText.slice(0, 200)}`);
+    }
+
+    const data = await res.json();
+    let b64 = null;
+
+    if (data.data?.[0]?.b64_json) b64 = data.data[0].b64_json;
+    else if (data.data?.[0]?.url) {
+      const blob = await fetchImageWithProgress(data.data[0].url, onProgress);
+      return { blob };
+    }
+    else if (data.images?.[0]?.b64_json) b64 = data.images[0].b64_json;
+    else if (data.images?.[0]?.url) {
+      const blob = await fetchImageWithProgress(data.images[0].url, onProgress);
+      return { blob };
+    }
+
+    if (!b64) throw new Error('Réponse Agnes sans image. Vérifie le format.');
+
+    const byteChars = atob(b64);
+    const bytes = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([bytes], { type: 'image/png' });
+    if (onProgress) onProgress(blob.size, blob.size);
+    return { blob };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/* ============================================================
+   POLLINATIONS (fallback flux)
+   ============================================================ */
+function buildPollinationsUrl(prompt, seed) {
+  const params = new URLSearchParams({
+    width: S.width,
+    height: S.height,
+    seed: seed,
+    model: 'flux',
+    nologo: S.nologo ? 'true' : 'false',
+    enhance: 'false',
+    _t: Date.now(),
+    _r: Math.random().toString(36).slice(2, 10)
+  });
+  return `${POLLINATIONS_URL}${encodeURIComponent(prompt)}?${params.toString()}`;
+}
+
+async function fetchImageWithProgress(url, onProgress) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+
+  try {
+    const res = await fetch(url, {
+      method: 'GET',
+      cache: 'no-store',
+      mode: 'cors',
+      signal: controller.signal,
+      headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const total = parseInt(res.headers.get('content-length') || '0', 10);
+    const reader = res.body.getReader();
+    const chunks = [];
+    let received = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      if (onProgress) onProgress(received, total);
+    }
+    return new Blob(chunks, { type: res.headers.get('content-type') || 'image/jpeg' });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function blobToImage(blob) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode error')); };
+    img.src = url;
+  });
+}
+
+async function hashBlob(blob) {
+  if (crypto.subtle) {
+    try {
+      const buf = await blob.arrayBuffer();
+      const hash = await crypto.subtle.digest('SHA-1', buf);
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch {}
+  }
+  const buf = new Uint8Array(await blob.slice(0, 100).arrayBuffer());
+  return `${blob.size}-${Array.from(buf).join('')}`;
+}
+
+function normalizePrompt(p) {
+  return p.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function showLoading(show) {
+  document.getElementById('loadingOverlay').classList.toggle('active', show);
+  if (show) {
+    document.getElementById('loadingText').textContent = 'Génération…';
+    document.getElementById('loadingSub').textContent = 'Agnes AI traite ton prompt.';
+    document.getElementById('loadingProgress').style.width = '0%';
+  }
+}
+
+/* ============================================================
+   RENDU CANVAS
+   ============================================================ */
+function redraw() {
+  ctx.clearRect(0, 0, W, H);
+  if (S.generatedImage) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    const img = S.generatedImage;
+    const imgRatio = img.width / img.height;
+    const canvasRatio = W / H;
+    let drawW, drawH, dx, dy;
+    if (imgRatio > canvasRatio) { drawH = H; drawW = drawH * imgRatio; dx = (W - drawW) / 2; dy = 0; }
+    else { drawW = W; drawH = drawW / imgRatio; dx = 0; dy = (H - drawH) / 2; }
+    ctx.drawImage(img, dx, dy, drawW, drawH);
+  } else {
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#0f0c1c');
+    grad.addColorStop(1, '#1a1430');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+  if (S.titleText || S.subtitleText) {
+    const vg = ctx.createRadialGradient(W/2, H/2, H*0.35, W/2, H/2, Math.max(W,H)*0.75);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.5)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+  }
+  if (S.emoji && S.emojiPos !== 'none') drawEmoji();
+  if (S.titleText) drawTitle();
+  if (S.subtitleText) drawSubtitle();
+}
+
+function drawEmoji() {
+  const size = S.emojiSize;
+  ctx.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const pad = 100 + size * 0.1;
+  let x, y;
+  switch (S.emojiPos) {
+    case 'tl': x = pad; y = pad; break;
+    case 'tr': x = W - pad; y = pad; break;
+    case 'bl': x = pad; y = H - pad; break;
+    case 'br': x = W - pad; y = H - pad; break;
+    default: return;
+  }
+  ctx.shadowColor = 'rgba(0,0,0,0.7)';
+  ctx.shadowBlur = 50;
+  ctx.fillText(S.emoji, x, y);
+  ctx.shadowBlur = 0;
+}
+
+function drawTitle() {
+  const size = S.titleSize;
+  ctx.font = `900 ${size}px "${S.titleFont}", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = S.titleColor;
+  const y = H * S.titleY;
+  if (S.titleGlow) { ctx.shadowColor = S.titleColor; ctx.shadowBlur = size * 0.5; }
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.lineWidth = size * 0.06;
+  ctx.lineJoin = 'round';
+  ctx.strokeText(S.titleText, W / 2, y);
+  ctx.fillText(S.titleText, W / 2, y);
+  ctx.shadowBlur = 0;
+}
+
+function drawSubtitle() {
+  const size = S.subtitleSize;
+  ctx.font = `800 ${size}px "${S.subtitleFont}", sans-serif`;
+  ctx.fillStyle = S.subtitleColor;
+  ctx.textBaseline = 'middle';
+  const y = H * S.titleY + (S.titleSize || 100) * 0.72;
+  if (S.titleGlow) { ctx.shadowColor = S.subtitleColor; ctx.shadowBlur = size * 0.4; }
+  const spacing = size * 0.08;
+  const chars = S.subtitleText.split('');
+  let total = 0;
+  const widths = chars.map(c => {
+    const w = ctx.measureText(c).width;
+    total += w + spacing;
+    return w;
+  });
+  total -= spacing;
+  let cursor = W / 2 - total / 2;
+  ctx.textAlign = 'left';
+  chars.forEach((ch, i) => { ctx.fillText(ch, cursor, y); cursor += widths[i] + spacing; });
+  ctx.shadowBlur = 0;
+  ctx.textAlign = 'center';
+}
+
+/* ============================================================
+   EFFACER
+   ============================================================ */
+function clearImage() {
+  if (!S.generatedImage && !S.titleText && !S.subtitleText && !S.emoji) {
+    showToast('Rien à effacer', 'info');
+    return;
+  }
+  if (!confirm('Effacer l\'image et tout l\'overlay ?')) return;
+  S.generatedImage = null;
+  S.currentSeed = null;
+  S.lastPrompt = '';
+  S.lastImageHash = null;
+  document.getElementById('titleText').value = '';
+  document.getElementById('subtitleText').value = '';
+  document.getElementById('emojiText').value = '';
+  S.titleText = ''; S.subtitleText = ''; S.emoji = '';
+  document.getElementById('emptyState').classList.remove('hidden');
+  document.getElementById('exportBtn').disabled = true;
+  document.getElementById('regenBtn').disabled = true;
+  document.getElementById('seedInfo').textContent = 'Seed : —';
+  document.getElementById('engineInfo').textContent = '—';
+  document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('active'));
+  updateOverlayCount();
+  redraw();
+  showToast('🗑️ Effacé');
+}
+
+/* ============================================================
+   EXPORT
+   ============================================================ */
+function exportPNG() {
+  if (!S.generatedImage) { showToast('Génère d\'abord une image !', 'error'); return; }
+  redraw();
+  try {
+    canvas.toBlob(blob => {
+      if (!blob) { showToast('❌ Export impossible', 'error'); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `banner-ai-${Date.now()}.png`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast('✅ Bannière téléchargée !');
+    }, 'image/png', 1.0);
+  } catch (e) { showToast('❌ Export impossible', 'error'); }
+}
+
+/* ============================================================
+   HISTORIQUE
+   ============================================================ */
+function addToHistory(url, prompt, seed, engine) {
+  S.history.unshift({ url, prompt, seed, engine, time: Date.now() });
+  if (S.history.length > 8) {
+    const removed = S.history.pop();
+    if (removed.url.startsWith('blob:')) URL.revokeObjectURL(removed.url);
+  }
+  renderHistory();
+}
+
+function renderHistory() {
+  const bar = document.getElementById('historyBar');
+  bar.innerHTML = S.history.map((h, i) => `
+    <img class="history-thumb ${i === 0 ? 'active' : ''}" src="${h.url}" data-idx="${i}" alt="Historique ${i+1}">
+  `).join('');
+  bar.querySelectorAll('.history-thumb').forEach(img => {
+    img.addEventListener('click', async () => {
+      const idx = parseInt(img.dataset.idx);
+      const h = S.history[idx];
+      try {
+        const blob = await fetch(h.url).then(r => r.blob());
+        const image = await blobToImage(blob);
+        S.generatedImage = image;
+        S.currentSeed = h.seed;
+        S.lastPrompt = normalizePrompt(h.prompt);
+        document.getElementById('promptInput').value = h.prompt;
+        document.getElementById('seedInput').value = h.seed || '';
+        updatePromptCount();
+        document.getElementById('seedInfo').textContent = `Seed : ${h.seed}`;
+        document.getElementById('engineInfo').textContent = h.engine || '—';
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('exportBtn').disabled = false;
+        document.getElementById('regenBtn').disabled = false;
+        bar.querySelectorAll('.history-thumb').forEach(t => t.classList.remove('active'));
+        img.classList.add('active');
+        redraw();
+        showToast('↩️ Image restaurée');
+      } catch (e) { showToast('❌ Impossible de restaurer', 'error'); }
+    });
+  });
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimeout;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.className = 'toast' + (type === 'error' ? ' error' : type === 'info' ? ' info' : '');
+  const icon = type === 'error' ? '⚠️' : type === 'info' ? 'ℹ️' : '✨';
+  t.innerHTML = `<span class="icon">${icon}</span><span>${msg}</span>`;
+  t.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* ============================================================
+   KEYBOARD
+   ============================================================ */
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); generate(false); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+    e.preventDefault();
+    if (!document.getElementById('exportBtn').disabled) exportPNG();
+  }
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init() {
+  buildPresets();
+  buildSuggestions();
+  buildEmojiGrid();
+  bind();
+  resizeStage();
+  updatePromptCount();
+  updateOverlayCount();
+  redraw();
+}
+
+init();
+</script>
+</body>
+</html>
